@@ -32,17 +32,35 @@ The system uses a directed graph where:
 - Each node can access specific tools based on its role
 
 ### 4. Node Level
-Each node in the graph is responsible for specific tasks:
-- **Coordinator Node**: Entry point that manages the workflow
-- **Planner Node**: Creates and manages research plans
-- **Researcher Node**: Conducts web searches and information gathering
-- **Coder Node**: Handles code execution and technical tasks
+MedDR implements a modular multi-agent system architecture designed for automated research and code analysis. The system is built on LangGraph, enabling a flexible state-based workflow where components communicate through a well-defined message passing system.
 
-### 5. Testing
-The project includes comprehensive testing:
-- `test_researcher.py`: Tests the researcher node functionality
-- Includes tests for web search, crawling, and information gathering
-- Demonstrates how to use the system's tools and agents
+![Architecture Diagram](./assets/architecture.png)
+
+The system employs a streamlined workflow with the following components:
+
+1. **Coordinator**: The entry point that manages the workflow lifecycle
+
+   - Initiates the research process based on user input
+   - Delegates tasks to the planner when appropriate
+   - Acts as the primary interface between the user and the system
+
+2. **Planner**: Strategic component for task decomposition and planning
+
+   - Analyzes research objectives and creates structured execution plans
+   - Determines if enough context is available or if more research is needed
+   - Manages the research flow and decides when to generate the final report
+
+3. **Research Team**: A collection of specialized agents that execute the plan:
+
+   - **Researcher**: Conducts web searches and information gathering using tools like web search engines, crawling and even MCP services.
+   - **Coder**: Handles code analysis, execution, and technical tasks using Python REPL tool.
+     Each agent has access to specific tools optimized for their role and operates within the LangGraph framework
+
+4. **Reporter**: Final stage processor for research outputs
+   - Aggregates findings from the research team
+   - Processes and structures the collected information
+   - Generates comprehensive research reports
+
 
 ## 📑 Table of Contents
 
@@ -67,7 +85,7 @@ Make sure your system meets the following minimum requirements:
 1. Clone the repository
 2. Create and activate a virtual environment:
 ```bash
-python -m venv test_env
+python -m venv meddr_env
 source test_env/bin/activate  # On Windows: test_env\Scripts\activate
 ```
 
@@ -97,12 +115,36 @@ To enable development mode, set the `MEDDR_DEV_MODE` environment variable to `tr
 export MEDDR_DEV_MODE=true
 ```
 
+### Running Examples
+
+```bash
+# Run with a specific query
+python3 main.py "What factors are influencing AI adoption in healthcare?"
+
+# Run with custom planning parameters
+python3 main.py --max_plan_iterations 3 "How does quantum computing impact cryptography?"
+
+# Run in interactive mode
+python3 main.py --interactive
+```
+
 ### Logging
 
 Logs are written to the `logs` directory:
 - Main log file: `logs/meddr.log`
 - Node-specific logs: `logs/{node_name}_{date}.log`
 - Development mode logs include detailed execution information
+
+> ## 🔔 Your task!
+> I have set a testing file `test_researcher.py`
+> This file includes the **researcher node's core functionality**.
+> - It covers key aspects like **web search, crawling, and information gathering**.
+> - Your task is to integrate tools that are similar to craw_tool, and focus on biomedical sources.
+
+### Run the testing example:
+```
+python3 /Users/liyuan/Desktop/projects/meddr/tests/test_researcher.py
+```
 
 ## Features
 
@@ -138,24 +180,11 @@ Logs are written to the `logs` directory:
   - AI-assisted refinements
   - Powered by [tiptap](https://tiptap.dev/)
 
-## Examples
 
-### Running Examples
-
-```bash
-# Run with a specific query
-python main.py "What factors are influencing AI adoption in healthcare?"
-
-# Run with custom planning parameters
-python main.py --max_plan_iterations 3 "How does quantum computing impact cryptography?"
-
-# Run in interactive mode
-python main.py --interactive
-```
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+..
 
 ## Acknowledgments
 
@@ -165,46 +194,3 @@ MedDR uses code from following GitHub repositories. We are grateful to all the p
 
 - [List of key contributors]
 
-## Architecture
-
-MedDR implements a modular multi-agent system architecture designed for automated research and code analysis. The system is built on LangGraph, enabling a flexible state-based workflow where components communicate through a well-defined message passing system.
-
-![Architecture Diagram](./assets/architecture.png)
-
-The system employs a streamlined workflow with the following components:
-
-1. **Coordinator**: The entry point that manages the workflow lifecycle
-
-   - Initiates the research process based on user input
-   - Delegates tasks to the planner when appropriate
-   - Acts as the primary interface between the user and the system
-
-2. **Planner**: Strategic component for task decomposition and planning
-
-   - Analyzes research objectives and creates structured execution plans
-   - Determines if enough context is available or if more research is needed
-   - Manages the research flow and decides when to generate the final report
-
-3. **Research Team**: A collection of specialized agents that execute the plan:
-
-   - **Researcher**: Conducts web searches and information gathering using tools like web search engines, crawling and even MCP services.
-   - **Coder**: Handles code analysis, execution, and technical tasks using Python REPL tool.
-     Each agent has access to specific tools optimized for their role and operates within the LangGraph framework
-
-4. **Reporter**: Final stage processor for research outputs
-   - Aggregates findings from the research team
-   - Processes and structures the collected information
-   - Generates comprehensive research reports
-
-## Supported Search Engines
-
-MedDR supports multiple search engines that can be configured in your `.env` file using the `SEARCH_API` variable:
-
-- **Arxiv**: Academic paper search engine
-
-To configure your preferred search engine, set the `SEARCH_API` variable in your `.env` file:
-
-```bash
-# Choose one: arxiv
-SEARCH_API=arxiv
-```
