@@ -18,7 +18,7 @@ The project follows a modular, graph-based architecture for deep research tasks.
 - Sets up logging and configuration
 - Manages the execution of the research workflow
 
-### 2. Workflow Management (`workflow.py`)
+### 2. Workflow Management (`src/workflow.py`)
 - Defines the high-level workflow structure
 - Manages the execution flow between different components
 - Handles logging and error management
@@ -132,7 +132,6 @@ python3 main.py --interactive
 
 Logs are written to the `logs` directory:
 - Main log file: `logs/meddr.log`
-- Node-specific logs: `logs/{node_name}_{date}.log`
 - Development mode logs include detailed execution information
 
 > ## 🔔 Your task!
