@@ -15,17 +15,17 @@ root_logger.setLevel(logging.INFO)  # Set to INFO level only
 # Create formatters
 formatter = logging.Formatter("%(asctime)s - %(message)s")
 
-# Console handler
+        # Console handler
 console_handler = logging.StreamHandler()
 console_handler.setFormatter(formatter)
 root_logger.addHandler(console_handler)
 
-# File handler
+        # File handler
 file_handler = logging.FileHandler(
-    filename=log_dir / "meddr.log",
-    encoding='utf-8',
-    mode='a'  # Append mode to preserve logs
-)
+            filename=log_dir / "meddr.log",
+            encoding='utf-8',
+            mode='a'  # Append mode to preserve logs
+        )
 file_handler.setFormatter(formatter)
 root_logger.addHandler(file_handler)
 

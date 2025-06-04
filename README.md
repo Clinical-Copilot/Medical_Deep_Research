@@ -86,7 +86,7 @@ Make sure your system meets the following minimum requirements:
 2. Create and activate a virtual environment:
 ```bash
 python -m venv meddr_env
-source test_env/bin/activate  # On Windows: test_env\Scripts\activate
+source meddr_env/bin/activate
 ```
 
 3. Install dependencies:

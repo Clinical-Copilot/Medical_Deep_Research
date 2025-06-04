@@ -71,40 +71,6 @@ def coordinator_node(
 
     return Command(goto=goto)
 
-# def background_investigation_node(
-#     state: State, config: RunnableConfig
-# ) -> Command[Literal["planner"]]:
-#     logger.info("background investigation node is running.")
-#     configurable = Configuration.from_runnable_config(config)
-#     query = state["messages"][-1].content
-#     if SELECTED_SEARCH_ENGINE == SearchEngine.TAVILY:
-#         searched_content = LoggedTavilySearch(
-#             max_results=configurable.max_search_results
-#         ).invoke({"query": query})
-#         background_investigation_results = None
-#         if isinstance(searched_content, list):
-#             background_investigation_results = [
-#                 {"title": elem["title"], "content": elem["content"]}
-#                 for elem in searched_content
-#             ]
-#         else:
-#             logger.error(
-#                 f"Tavily search returned malformed response: {searched_content}"
-#             )
-#     else:
-#         background_investigation_results = get_web_search_tool(
-#             configurable.max_search_results
-#         ).invoke(query)
-#     return Command(
-#         update={
-#             "background_investigation_results": json.dumps(
-#                 background_investigation_results, ensure_ascii=False
-#             )
-#         },
-#         goto="planner",
-#     )
-
-
 def planner_node(
     state: State, config: RunnableConfig
 ) -> Command[Literal["human_feedback", "reporter"]]:
