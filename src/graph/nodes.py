@@ -65,7 +65,7 @@ def coordinator_node(
         goto = "planner"
     else:
         logger.warning(
-            "Coordinator response contains no tool calls. Terminating workflow execution."
+            f"Coordinator response contains no tool calls. Terminating workflow execution. Response: {response}"
         )
         logger.debug(f"Coordinator response: {response}")
 

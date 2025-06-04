@@ -28,13 +28,13 @@ config = {
             "max_step_num": 1,
             "mcp_settings": {
                 "servers": {
-                    "mcp-github-trending": {
-                        "transport": "stdio",
-                        "command": "uvx",
-                        "args": ["mcp-github-trending"],
-                        "enabled_tools": ["get_github_trending_repositories"],
-                        "add_to_agents": ["researcher"],
-                    }
+                    # "mcp-github-trending": {
+                    #     "transport": "stdio",
+                    #     "command": "uvx",
+                    #     "args": ["mcp-github-trending"],
+                    #     "enabled_tools": ["get_github_trending_repositories"],
+                    #     "add_to_agents": ["researcher"],
+                    # }
                 }
             },
         },
@@ -65,7 +65,7 @@ async def test_research():
     client = MultiServerMCPClient(mcp_servers)
     
     # Get default tools
-    loaded_tools = []
+    loaded_tools = [crawl_tool]
     
     # Get tools from MCP servers
     try:
@@ -95,9 +95,7 @@ async def test_research():
     
     # Test queries
     test_queries = [
-        "What are the latest developments in mRNA vaccine technology?",
-        "Find information about recent clinical trials for Alzheimer's disease treatment",
-        "What are the current research findings on CRISPR gene editing in cancer treatment?"
+        "Help me research about"
     ]
     
     for query in test_queries:
