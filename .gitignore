@@ -21,10 +21,7 @@ wheels/
 *.egg
 
 # Virtual Environment
-venv/
-env/
-ENV/
-test_env/
+meddr_env/
 
 # IDE
 .idea/
@@ -66,7 +63,3 @@ static/browser_history/*.gif
 # coverage report
 coverage.xml
 coverage/
-
-
-# env
-meddr_env/
