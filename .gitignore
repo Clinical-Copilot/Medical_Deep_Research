@@ -68,3 +68,5 @@ coverage/
 meddr_env/
 *.ipynb
 test_google.py
+
+CLAUDE.md
