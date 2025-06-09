@@ -95,7 +95,7 @@ async def test_research():
     
     # Test queries
     test_queries = [
-        "Help me research about"
+        "Help me research about Yingtao Luo"
     ]
     
     for query in test_queries:

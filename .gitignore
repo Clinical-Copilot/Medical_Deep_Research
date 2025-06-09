@@ -66,3 +66,7 @@ static/browser_history/*.gif
 # coverage report
 coverage.xml
 coverage/
+
+
+# env
+meddr_env/
