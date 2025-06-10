@@ -3,6 +3,8 @@ import logging
 import os
 from pathlib import Path
 from src.graph import build_graph
+from langchain_core.messages import HumanMessage, AIMessage
+from src.prompts.planner_model import Plan
 
 # Create logs directory if it doesn't exist
 log_dir = Path("logs")
@@ -38,11 +40,46 @@ logger = logging.getLogger(__name__)
 # Create the graph
 graph = build_graph()
 
+def serialize_message(message):
+    """Helper function to serialize a message object to a dict."""
+    if isinstance(message, (HumanMessage, AIMessage)):
+        return {
+            "role": message.type,
+            "content": message.content,
+            "name": getattr(message, "name", None)
+        }
+    elif isinstance(message, dict):
+        return message
+    else:
+        return {"role": "system", "content": str(message)}
+
+def serialize_plan(plan):
+    """Helper function to serialize a Plan object to a dict."""
+    if isinstance(plan, Plan):
+        return {
+            "has_enough_context": plan.has_enough_context,
+            "thought": plan.thought,
+            "title": plan.title,
+            "steps": [
+                {
+                    "title": step.title,
+                    "description": step.description,
+                    "step_type": step.step_type.value if step.step_type else None,
+                    "execution_res": step.execution_res
+                }
+                for step in plan.steps
+            ]
+        }
+    elif isinstance(plan, dict):
+        return plan
+    else:
+        return {"error": "Invalid plan format"}
+
 async def run_agent_workflow_async(
     user_input: str,
     debug: bool = False,
     max_plan_iterations: int = 1,
-    max_step_num: int = 3
+    max_step_num: int = 2  # Reduced to prevent deep recursion
 ):
     """Run the agent workflow asynchronously with the given user input.
 
@@ -62,9 +99,10 @@ async def run_agent_workflow_async(
     initial_state = {
         # Runtime Variables
         "messages": [{"role": "user", "content": user_input}],
-        "auto_accepted_plan": True
-        ##TODO: consider how to incorporate human feedback into the workflow
-        # "auto_accepted_plan": False
+        "auto_accepted_plan": True,  # Auto-accept plans to reduce recursion
+        "plan_iterations": 0,  # Track plan iterations
+        "current_plan": None,  # Initialize plan
+        "observations": []  # Track observations
     }
     config = {
         "configurable": {
@@ -83,31 +121,45 @@ async def run_agent_workflow_async(
                 }
             },
         },
-        "recursion_limit": 100,
+        "recursion_limit": 20,  # Increased to 20 for more flexibility
     }
     last_message_cnt = 0
-    async for s in graph.astream(
-        input=initial_state, config=config, stream_mode="values"
-    ):  
-        try:
-            if isinstance(s, dict) and "messages" in s:
-                if len(s["messages"]) <= last_message_cnt:
-                    continue
-                last_message_cnt = len(s["messages"])
-                message = s["messages"][-1]
-                if isinstance(message, tuple):
-                    logger.info(f"Processing: {message[0]}")
-                    print(message)
+    try:
+        async for s in graph.astream(
+            input=initial_state, config=config, stream_mode="values"
+        ):  
+            try:
+                if isinstance(s, dict) and "messages" in s:
+                    if len(s["messages"]) <= last_message_cnt:
+                        continue
+                    last_message_cnt = len(s["messages"])
+                    message = s["messages"][-1]
+                    if isinstance(message, tuple):
+                        logger.info(f"Processing: {message[0]}")
+                        print(message)
+                    else:
+                        logger.info(f"Processing: {message.get('content', '')}")
+                        print(f"Message: {message}")
                 else:
-                    logger.info(f"Processing: {message.get('content', '')}")
-                    print(f"Message: {message}")
-            else:
-                # For any other output format
-                logger.info(f"Processing: {s}")
-                print(f"Output: {s}")
-        except Exception as e:
-            logger.error(f"Error: {str(e)}")
-            print(f"Error processing output: {str(e)}")
+                    # For any other output format
+                    logger.info(f"Processing: {s}")
+                    print(f"Output: {s}")
+            except Exception as e:
+                logger.error(f"Error: {str(e)}")
+                print(f"Error processing output: {str(e)}")
+        
+        # Serialize messages and plan before returning
+        if isinstance(s, dict):
+            if "messages" in s:
+                s["messages"] = [serialize_message(msg) for msg in s["messages"]]
+            if "current_plan" in s:
+                s["current_plan"] = serialize_plan(s["current_plan"])
+        
+        # Return the final state
+        return s
+    except Exception as e:
+        logger.error(f"Workflow error: {str(e)}")
+        raise
 
     logger.info("Workflow completed successfully")
 

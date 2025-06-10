@@ -22,6 +22,7 @@ wheels/
 
 # Virtual Environment
 meddr_env/
+venv/
 
 # IDE
 .idea/

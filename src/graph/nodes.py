@@ -251,7 +251,7 @@ async def _execute_agent_step(
         )
 
     # Invoke the agent
-    default_recursion_limit = 25
+    default_recursion_limit = 10
     try:
         env_value_str = os.getenv("AGENT_RECURSION_LIMIT", str(default_recursion_limit))
         parsed_limit = int(env_value_str)

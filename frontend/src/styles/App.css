@@ -1,0 +1,310 @@
+:root {
+  --primary-color: #2563eb;
+  --primary-hover: #1d4ed8;
+  --background-color: #f8fafc;
+  --chat-background: #ffffff;
+  --text-color: #1e293b;
+  --border-color: #e2e8f0;
+  --success-color: #059669;
+  --error-color: #dc2626;
+  --plan-bg: #eff6ff;
+  --plan-border: #bfdbfe;
+  --message-user-bg: #2563eb;
+  --message-system-bg: #f1f5f9;
+  --message-error-bg: #fee2e2;
+  --message-plan-bg: #eff6ff;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background-color: var(--background-color);
+  color: var(--text-color);
+  line-height: 1.5;
+}
+
+.app {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--chat-background);
+  border-radius: 1rem;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  overflow: hidden;
+  position: relative;
+}
+
+.welcome-message {
+  padding: 4rem 2rem;
+  text-align: center;
+  color: var(--text-color);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  background: linear-gradient(to bottom, #ffffff, #f8fafc);
+}
+
+.welcome-message h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  color: var(--primary-color);
+  letter-spacing: -0.025em;
+}
+
+.welcome-message p {
+  font-size: 1.125rem;
+  color: #64748b;
+  line-height: 1.75;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  scroll-behavior: smooth;
+}
+
+.message {
+  padding: 1rem 1.25rem;
+  border-radius: 0.75rem;
+  max-width: 85%;
+  word-wrap: break-word;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.message.user {
+  align-self: flex-end;
+  background-color: var(--message-user-bg);
+  color: white;
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+}
+
+.message.system {
+  align-self: flex-start;
+  background-color: var(--message-system-bg);
+  border: 1px solid var(--border-color);
+}
+
+.message.error {
+  align-self: flex-start;
+  background-color: var(--message-error-bg);
+  border: 1px solid #fecaca;
+  color: var(--error-color);
+}
+
+.message.plan {
+  align-self: flex-start;
+  background-color: var(--message-plan-bg);
+  border: 1px solid var(--plan-border);
+}
+
+.plan-section {
+  margin-bottom: 1rem;
+  background-color: rgba(255, 255, 255, 0.8);
+  border-radius: 0.5rem;
+  padding: 1rem;
+}
+
+.plan-section h3 {
+  color: var(--primary-color);
+  margin-bottom: 0.75rem;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.plan-section pre {
+  background-color: white;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  overflow-x: auto;
+  font-size: 0.875rem;
+  border: 1px solid var(--border-color);
+}
+
+.input-form {
+  display: flex;
+  gap: 0.75rem;
+  padding: 1.25rem;
+  background-color: white;
+  border-top: 1px solid var(--border-color);
+  position: sticky;
+  bottom: 0;
+  margin-top: auto;
+}
+
+.input-form input {
+  flex: 1;
+  padding: 0.875rem 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.75rem;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  background-color: var(--background-color);
+}
+
+.input-form input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.input-form button {
+  padding: 0.875rem;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 0.75rem;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 3rem;
+}
+
+.input-form button:hover {
+  background-color: var(--primary-hover);
+  transform: translateY(-1px);
+}
+
+.input-form button:disabled {
+  background-color: #94a3b8;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.input-form button::before {
+  content: "→";
+  font-size: 1.25rem;
+  font-weight: 500;
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: #64748b;
+  font-style: italic;
+}
+
+.loading-spinner {
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 2px solid #e2e8f0;
+  border-top: 2px solid var(--primary-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.error-content {
+  color: var(--error-color);
+  font-weight: 500;
+}
+
+/* Markdown styling */
+.message-content {
+  line-height: 1.6;
+}
+
+.message-content h1,
+.message-content h2,
+.message-content h3,
+.message-content h4,
+.message-content h5,
+.message-content h6 {
+  margin-top: 1.5em;
+  margin-bottom: 0.75em;
+  color: var(--text-color);
+  font-weight: 600;
+}
+
+.message-content p {
+  margin-bottom: 1em;
+}
+
+.message-content ul,
+.message-content ol {
+  margin-bottom: 1em;
+  padding-left: 1.5em;
+}
+
+.message-content code {
+  background-color: #f1f5f9;
+  padding: 0.2em 0.4em;
+  border-radius: 0.25rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.875em;
+}
+
+.message-content pre {
+  background-color: #f1f5f9;
+  padding: 1em;
+  border-radius: 0.5rem;
+  overflow-x: auto;
+  margin-bottom: 1em;
+  border: 1px solid var(--border-color);
+}
+
+.message-content blockquote {
+  border-left: 4px solid var(--primary-color);
+  margin: 1em 0;
+  padding-left: 1em;
+  color: #64748b;
+  font-style: italic;
+}
+
+.message-content table {
+  border-collapse: collapse;
+  width: 100%;
+  margin-bottom: 1em;
+  border: 1px solid var(--border-color);
+}
+
+.message-content th,
+.message-content td {
+  border: 1px solid var(--border-color);
+  padding: 0.75em;
+  text-align: left;
+}
+
+.message-content th {
+  background-color: #f8fafc;
+  font-weight: 600;
+}
+
+.message-content tr:nth-child(even) {
+  background-color: #f8fafc;
+} 

@@ -5,7 +5,7 @@ import base64
 import json
 import logging
 import os
-from typing import List, cast
+from typing import List, cast, Optional, Dict, Any
 from uuid import uuid4
 
 from fastapi import FastAPI, HTTPException
@@ -13,6 +13,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response, StreamingResponse
 from langchain_core.messages import AIMessageChunk, ToolMessage, BaseMessage
 from langgraph.types import Command
+from pydantic import BaseModel
+import asyncio
 
 from src.graph.builder import build_graph_with_memory
 from src.podcast.graph.builder import build_graph as build_podcast_graph
@@ -27,6 +29,7 @@ from src.server.chat_request import (
     )
 from src.server.mcp_request import MCPServerMetadataRequest, MCPServerMetadataResponse
 from src.server.mcp_utils import load_mcp_tools
+from src.workflow import run_agent_workflow_async
 
 logger = logging.getLogger(__name__)
 
@@ -39,14 +42,39 @@ app = FastAPI(
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allows all origins
+    allow_origins=["http://localhost:3000"],  # Frontend URL
     allow_credentials=True,
-    allow_methods=["*"],  # Allows all methods
-    allow_headers=["*"],  # Allows all headers
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 graph = build_graph_with_memory()
 
+class ChatRequest(BaseModel):
+    query: str
+
+class ChatResponse(BaseModel):
+    plan: Optional[Dict[str, Any]] = None
+    report: Optional[str] = None
+
+@app.post("/api/chat", response_model=ChatResponse)
+async def chat(request: ChatRequest):
+    try:
+        # Run the workflow
+        result = await run_agent_workflow_async(
+            user_input=request.query,
+            debug=True,
+            max_plan_iterations=1,
+            max_step_num=3
+        )
+        
+        # Extract plan and report from the result
+        plan = result.get("current_plan")
+        report = result.get("final_report")
+        
+        return ChatResponse(plan=plan, report=report)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/chat/stream")
 async def chat_stream(request: ChatRequest):
