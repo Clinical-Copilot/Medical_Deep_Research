@@ -115,10 +115,10 @@ cd /path/to/meddr/backend
 
 activate your virtual environment
 
-# Install backend dependencies
+### Install backend dependencies
 pip install -r requirements.txt
 
-# Start the backend server
+### Start the backend server
 uvicorn main:app --reload
 ```
 
