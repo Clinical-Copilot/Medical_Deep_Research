@@ -103,6 +103,44 @@ cp .env.example .env
 cp conf.yaml.example conf.yaml
 ```
 
+## Full Stack Setup
+
+To run both the frontend and backend together, follow these steps:
+
+1. **Backend Setup**
+```bash
+# Make sure you're in the project root directory
+cd /path/to/meddr/backend
+```
+
+activate your virtual environment
+
+# Install backend dependencies
+pip install -r requirements.txt
+
+# Start the backend server
+uvicorn main:app --reload
+```
+
+2. **Frontend Setup**
+```bash
+# Open a new terminal window
+cd path/to/meddr/frontend
+
+# Install frontend dependencies
+npm install
+
+# Start the frontend development server
+npm run dev
+```
+
+3. **Access the Application**
+- Frontend will be available at: `http://localhost:3000`
+
+4. **Environment Configuration**
+- Make sure both `.env` and `conf.yaml` are properly configured
+- Frontend environment variables should be set in `.env.local` in the frontend directory
+
 ## Development Mode
 
 MedDR includes a development mode that helps track and debug node execution. When enabled, it logs detailed information about each node's inputs, prompts, outputs, and execution results to both the console and log files.

@@ -154,6 +154,12 @@ async def run_agent_workflow_async(
                 s["messages"] = [serialize_message(msg) for msg in s["messages"]]
             if "current_plan" in s:
                 s["current_plan"] = serialize_plan(s["current_plan"])
+            
+            # Capture coordinator response from the last message
+            if "messages" in s and s["messages"]:
+                last_message = s["messages"][-1]
+                if isinstance(last_message, dict) and last_message.get("role") == "assistant":
+                    s["coordinator_response"] = last_message.get("content")
         
         # Return the final state
         return s
