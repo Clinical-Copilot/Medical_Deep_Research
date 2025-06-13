@@ -20,3 +20,5 @@ duckduckgo-search>=8.0.0
 inquirerpy>=0.3.4
 arxiv>=2.2.0
 langchain-mcp-adapters
+scholarly
+google-api-python-client

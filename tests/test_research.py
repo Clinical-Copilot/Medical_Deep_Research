@@ -10,6 +10,7 @@ sys.path.insert(0, str(project_root))
 from src.llms.llm import get_llm_by_type
 from src.config.agents import AGENT_LLM_MAP
 from src.tools import crawl_tool
+from src.tools.google_search import google_search
 from langchain_mcp_adapters.client import MultiServerMCPClient
 from langgraph.prebuilt import create_react_agent
 
@@ -65,7 +66,7 @@ async def test_research():
     client = MultiServerMCPClient(mcp_servers)
     
     # Get default tools
-    loaded_tools = [crawl_tool]
+    loaded_tools = [crawl_tool, google_search]
     
     # Get tools from MCP servers
     try:

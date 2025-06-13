@@ -1,11 +1,15 @@
 # Simple tool for google search and google scholar search
 
+# The project is built upon Bytedance MedDR
+# SPDX-License-Identifier: MIT
+
 import os
 import logging
 from scholarly import scholarly  
-from typing import Optional, Dict, Any
+from typing import Annotated, Dict, Any
 from googleapiclient.discovery import build 
 from langchain_core.tools import tool
+from .decorators import log_io
 
 logger = logging.getLogger(__name__)
 
@@ -13,45 +17,49 @@ def get_search_service():
     """Get Google Custom Search service."""
     api_key = os.getenv("GOOGLE_API_KEY")
     if not api_key:
-        raise ValueError("GOOGLE_API_KEY environment variable is not set.") # remember to set environment variable 
+        raise ValueError("GOOGLE_API_KEY environment variable is not set.")
     return build("customsearch", "v1", developerKey=api_key)    
 
-@tool  
-def google_search(query: str, num_results: int = 10) -> str:
-    """Perform a Google search using Custom Search API."""
+@tool
+@log_io  
+def google_search(
+    query: Annotated[str, "The search query to look up."],
+    num_results: Annotated[int, "Number of results to return (max 10)."] = 1
+) -> Dict[str, Any]:
+    """Use this to search the web using Google Custom Search API."""
     try:
         cse_id = os.getenv("GOOGLE_CSE_ID")
         if not cse_id:
-            raise ValueError("GOOGLE_CSE_ID environment variable is not set.")  # remember to set environment variable
+            raise ValueError("GOOGLE_CSE_ID environment variable is not set.")
         
         service = get_search_service()
         response = service.cse().list(
-            q = query,
-            cx = cse_id,
-            num = min(num_results, 10)
+            q=query,
+            cx=cse_id,
+            num=min(num_results, 10)
         ).execute()
         
         items = response.get("items", [])
         if not items:
-            return f"No search results found for {query}."
+            return {"query": query, "results": []}
         
-        formatted_results = [f"Google Search Results for: '{query}'\n"]
+        results = []
         for item in items:
-            title = item.get("title", "No title")
-            link = item.get("link", "No link")
-            snippet = item.get("snippet", "No description")
-            domain = item.get("displayLink", "")
-            formatted_results.append(f"Title: {title}\nLink: {link}\nDescription: {snippet}\nDomain: {domain}\n")
+            results.append({
+                "title": item.get("title", "No title"),
+                "link": item.get("link", "No link"),
+                "snippet": item.get("snippet", "No description"),
+                "domain": item.get("displayLink", "")
+            })
             
-        return "\n".join(formatted_results)
+        return {"query": query, "results": results}
         
     except Exception as e:
-        error_msg = f"Failed to search. Error: {e}"
+        error_msg = f"Failed to search. Error: {repr(e)}"
         logger.error(error_msg)
-        return error_msg
+        return {"query": query, "error": error_msg}
 
-
-@tool 
+@tool
 def google_scholar_search(query: str, num_results: int = 10) -> str:
     """Perform a Google Scholar search using the scholarly package."""
     try:
@@ -96,3 +104,6 @@ def google_scholar_search(query: str, num_results: int = 10) -> str:
         error_msg = f"Failed to search. Error: {e}"
         logger.error(error_msg)
         return error_msg
+
+# if __name__ == "__main__":
+#     print(google_search.invoke("test query"))

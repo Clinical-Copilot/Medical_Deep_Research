@@ -11,4 +11,5 @@ __all__ = [
     "crawl_tool",
     "python_repl_tool",
     "get_web_search_tool",
+    "google_search",
     ]
