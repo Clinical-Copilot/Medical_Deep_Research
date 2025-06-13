@@ -108,21 +108,20 @@ cp conf.yaml.example conf.yaml
 To run both the frontend and backend together, follow these steps:
 
 1. **Backend Setup**
+    Activate your virtual environment
     ```bash
     # Make sure you're in the project root directory
     cd /path/to/meddr/backend
     ```
-
-    activate your virtual environment
 
     Install backend dependencies
     ```bash
     pip install -r requirements.txt
     ```
 
-    ### Add .env file to the backend folder, and include OPENAI_API_KEY .
+    Add `.env` file to the backend folder, and include `OPENAI_API_KEY`.
 
-    ### Start the backend server
+    Start the backend server
     ```bash
     uvicorn main:app --reload
     ```
