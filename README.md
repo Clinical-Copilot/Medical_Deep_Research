@@ -108,41 +108,43 @@ cp conf.yaml.example conf.yaml
 To run both the frontend and backend together, follow these steps:
 
 1. **Backend Setup**
-```bash
-# Make sure you're in the project root directory
-cd /path/to/meddr/backend
-```
+    ```bash
+    # Make sure you're in the project root directory
+    cd /path/to/meddr/backend
+    ```
 
-activate your virtual environment
+    activate your virtual environment
 
-### Install backend dependencies
-pip install -r requirements.txt
+    Install backend dependencies
+    ```bash
+    pip install -r requirements.txt
+    ```
 
-### Add .env file to the backend folder, and include OPENAI_API_KEY .
+    ### Add .env file to the backend folder, and include OPENAI_API_KEY .
 
-### Start the backend server
-```bash
-uvicorn main:app --reload
-```
+    ### Start the backend server
+    ```bash
+    uvicorn main:app --reload
+    ```
 
 2. **Frontend Setup**
-```bash
-# Open a new terminal window
-cd path/to/meddr/frontend
+    ```bash
+    # Open a new terminal window
+    cd path/to/meddr/frontend
 
-# Install frontend dependencies
-npm install
+    # Install frontend dependencies
+    npm install
 
-# Start the frontend development server
-npm run dev
-```
+    # Start the frontend development server
+    npm run dev
+    ```
 
 3. **Access the Application**
-- Frontend will be available at: `http://localhost:3000`
+   - Frontend will be available at: `http://localhost:3000`
 
 4. **Environment Configuration**
-- Make sure both `.env` and `conf.yaml` are properly configured
-- Frontend environment variables should be set in `.env.local` in the frontend directory
+   - Make sure both `.env` and `conf.yaml` are properly configured
+   - Frontend environment variables should be set in `.env.local` in the frontend directory
 
 ## Development Mode
 
