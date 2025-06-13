@@ -31,7 +31,6 @@ from src.utils.json_utils import repair_json_output
 
 from .types import State
 from ..config import SELECTED_SEARCH_ENGINE, SearchEngine
-from .dev_mode import log_node_execution
 
 logger = logging.getLogger(__name__)
 
@@ -195,6 +194,8 @@ def research_team_node(
         if not step.execution_res:
             break
     if step.step_type and step.step_type == StepType.RESEARCH:
+        logger.info(f"Research team sending to researcher: {step.title}")
+        logger.info(f"Step description: {step.description}")
         return Command(goto="researcher")
     if step.step_type and step.step_type == StepType.PROCESSING:
         return Command(goto="coder")
@@ -249,6 +250,11 @@ async def _execute_agent_step(
                 name="system",
             )
         )
+        logger.info("=== Researcher Input Messages ===")
+        for msg in agent_input["messages"]:
+            logger.info(f"Message from {msg.name if hasattr(msg, 'name') else 'user'}:")
+            logger.info(msg.content)
+            logger.info("---")
 
     # Invoke the agent
     default_recursion_limit = 10
@@ -422,68 +428,26 @@ def reporter_node(state: State):
     return {"final_report": response_content}
 
 def node(func: Callable) -> Callable:
-    """Decorator to create a node with development mode logging.
+    """Decorator to create a node.
     
     Args:
         func: The function to wrap as a node
         
     Returns:
-        Wrapped function with development mode logging
+        Wrapped function
     """
     @wraps(func)
     async def async_wrapper(*args, **kwargs):
-        # Get node name from function
-        node_name = func.__name__
-        
-        # Combine args and kwargs into inputs dict
-        inputs = {}
-        if args:
-            inputs["args"] = args
-        if kwargs:
-            inputs.update(kwargs)
-            
         try:
-            # Execute the node function
-            outputs = await func(*args, **kwargs)
-            
-            # Log successful execution if dev mode is enabled
-            if os.getenv("MEDDR_DEV_MODE", "false").lower() == "true":
-                log_node_execution(node_name, inputs, outputs)
-                
-            return outputs
-            
+            return await func(*args, **kwargs)
         except Exception as e:
-            # Log error if dev mode is enabled
-            if os.getenv("MEDDR_DEV_MODE", "false").lower() == "true":
-                log_node_execution(node_name, inputs, error=e)
             raise
 
     @wraps(func)
     def sync_wrapper(*args, **kwargs):
-        # Get node name from function
-        node_name = func.__name__
-        
-        # Combine args and kwargs into inputs dict
-        inputs = {}
-        if args:
-            inputs["args"] = args
-        if kwargs:
-            inputs.update(kwargs)
-            
         try:
-            # Execute the node function
-            outputs = func(*args, **kwargs)
-            
-            # Log successful execution if dev mode is enabled
-            if os.getenv("MEDDR_DEV_MODE", "false").lower() == "true":
-                log_node_execution(node_name, inputs, outputs)
-                
-            return outputs
-            
+            return func(*args, **kwargs)
         except Exception as e:
-            # Log error if dev mode is enabled
-            if os.getenv("MEDDR_DEV_MODE", "false").lower() == "true":
-                log_node_execution(node_name, inputs, error=e)
             raise
 
     # Return the appropriate wrapper based on whether the function is async

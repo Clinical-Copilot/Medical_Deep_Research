@@ -12,14 +12,14 @@ log_dir.mkdir(exist_ok=True)
 
 # Configure root logger
 root_logger = logging.getLogger()
-root_logger.setLevel(logging.INFO)  # Set to INFO level only
+root_logger.setLevel(logging.INFO)
 
-# Create formatters
-formatter = logging.Formatter("%(asctime)s - %(message)s")
+# Create simple formatter
+simple_formatter = logging.Formatter("%(message)s")
 
 # Console handler
 console_handler = logging.StreamHandler()
-console_handler.setFormatter(formatter)
+console_handler.setFormatter(simple_formatter)
 root_logger.addHandler(console_handler)
 
 # File handler
@@ -28,7 +28,7 @@ file_handler = logging.FileHandler(
             encoding='utf-8',
             mode='a'  # Append mode to preserve logs
         )
-file_handler.setFormatter(formatter)
+file_handler.setFormatter(simple_formatter)
 root_logger.addHandler(file_handler)
 
 # Set all loggers to INFO level
@@ -135,18 +135,13 @@ async def run_agent_workflow_async(
                     last_message_cnt = len(s["messages"])
                     message = s["messages"][-1]
                     if isinstance(message, tuple):
-                        logger.info(f"Processing: {message[0]}")
-                        print(message)
+                        print(message[0])
                     else:
-                        logger.info(f"Processing: {message.get('content', '')}")
-                        print(f"Message: {message}")
+                        print(message.get('content', ''))
                 else:
-                    # For any other output format
-                    logger.info(f"Processing: {s}")
-                    print(f"Output: {s}")
+                    print(s)
             except Exception as e:
-                logger.error(f"Error: {str(e)}")
-                print(f"Error processing output: {str(e)}")
+                print(f"Error: {str(e)}")
         
         # Serialize messages and plan before returning
         if isinstance(s, dict):
@@ -166,8 +161,6 @@ async def run_agent_workflow_async(
     except Exception as e:
         logger.error(f"Workflow error: {str(e)}")
         raise
-
-    logger.info("Workflow completed successfully")
 
 
 if __name__ == "__main__":

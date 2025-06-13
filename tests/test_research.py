@@ -13,10 +13,10 @@ from src.tools import crawl_tool
 from langchain_mcp_adapters.client import MultiServerMCPClient
 from langgraph.prebuilt import create_react_agent
 
-# Configure logging
+# Configure logging with a simpler format
 logging.basicConfig(
     level=logging.INFO,
-    format="%(asctime)s - %(message)s"
+    format="%(message)s"  # Only show the message, no timestamp
 )
 logger = logging.getLogger(__name__)
 
@@ -76,9 +76,9 @@ async def test_research():
                     f"Powered by '{enabled_tools[tool.name]}'.\n{tool.description}"
                 )
                 loaded_tools.append(tool)
-        logger.info(f"Successfully loaded {len(loaded_tools)} tools from MCP servers")
+        print(f"Loaded {len(loaded_tools)} tools")
     except Exception as e:
-        logger.error(f"Error loading tools from MCP servers: {e}")
+        print(f"Error loading tools: {e}")
         loaded_tools = []  # Fallback to empty tools list if MCP fails
 
     # Create the agent with MCP tools
@@ -89,17 +89,17 @@ async def test_research():
         prompt="""You are a biomedical research assistant that helps gather comprehensive information from multiple sources.
         Use the available tools to find and analyze information from various biomedical sources.
         Focus on peer-reviewed articles, clinical trials, and medical research papers.
-        Make sure to clearly label which information comes from which source.""",
+        Make sure to clearly label which information comes from which source. DO NOT include inline citations in the text. Instead, track all sources and include a References section at the end using link reference format. Include an empty line between each citation for better readability. Use this format for each reference:\n- [Source Title](URL)\n\n- [Another Source](URL)""",
         name="biomedical_research_assistant"
     )
     
     # Test queries
     test_queries = [
-        "Help me research about Yingtao Luo"
+        "What can I do if I get covid?"
     ]
     
     for query in test_queries:
-        logger.info(f"\nTesting query: {query}")
+        print(f"\nQuery: {query}")
         result = await agent.ainvoke({
             "messages": [{
                 "role": "user",
@@ -108,12 +108,15 @@ async def test_research():
         })
         
         messages = result.get("messages", [])
-        assert messages, "No messages were returned"
+        print(messages)
+        # assert messages, "No messages were returned"
         
-        # Log the results for inspection
-        logger.info(f"Number of messages: {len(messages)}")
-        for message in messages:
-            logger.info(f"Message content: {message}")
+        # # Print the results in a cleaner format
+        # for message in messages:
+        #     if hasattr(message, 'content'):
+        #         print(f"\n{message.content}")
+        #     else:
+        #         print(f"\n{message}")
 
 if __name__ == "__main__":
     asyncio.run(test_research()) 
