@@ -1,7 +1,8 @@
+# Test the MCP Google Search tool
+
 from src.tools import mcp_google_search
 
 def test_mcp_search():
-    # Test a simple search
     query = "latest developments in AI"
     print(f"\nTesting MCP Google Search with query: '{query}'")
     
