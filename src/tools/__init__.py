@@ -12,10 +12,7 @@ __all__ = [
     "crawl_tool",
     "python_repl_tool",
     "get_web_search_tool",
-<<<<<<< HEAD
     "google_search",
-    ]
-=======
-    "mcp_google_search",
+    "mcp_google_search"
 ]
->>>>>>> 0c90b5c3d33eb245ceae3010bdfc1c799b91b497
+
