@@ -121,6 +121,7 @@ pip install -r requirements.txt
 ### Add .env file to the backend folder, and include OPENAI_API_KEY .
 
 ### Start the backend server
+```bash
 uvicorn main:app --reload
 ```
 
