@@ -62,6 +62,9 @@ static/browser_history/*.gif
 .langgraph_api/
 CLAUDE.md
 
+changes.md
+.claude/
+
 # some testing files
 coverage.xml
 coverage/
