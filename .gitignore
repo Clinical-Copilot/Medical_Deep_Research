@@ -66,6 +66,3 @@ CLAUDE.md
 coverage.xml
 coverage/
 meddr_env/
-
-# MCP Server (external dependency)
-mcp-google-custom-search-server/

@@ -1,4 +1,4 @@
-# MCP Google Custom Search Server client (replace google_search, not google_scholar_search, yet)
+# MCP Google Custom Search Server client (replace google_search.py)
 
 import os
 import logging
@@ -10,17 +10,20 @@ from langchain_core.tools import tool
 logger = logging.getLogger(__name__)
 
 class MCPGoogleSearch:
+    """MCP Google Custom Search Server client."""
+    
     def __init__(self):
         self.mcp_server_url = os.getenv("MCP_SERVER_URL", "http://localhost:3000")
         self.api_key = os.getenv("GOOGLE_API_KEY")
-        self.search_engine_id = os.getenv("GOOGLE_CSE_ID")
+        self.search_engine_id = os.getenv("GOOGLE_SEARCH_ENGINE_ID")
         
         if not self.api_key:
             raise ValueError("GOOGLE_API_KEY environment variable is not set")
         if not self.search_engine_id:
-            raise ValueError("GOOGLE_CSE_ID environment variable is not set")
+            raise ValueError("GOOGLE_SEARCH_ENGINE_ID environment variable is not set")
 
     def search(self, query: str, num_results: int = 10) -> Dict[str, Any]:
+        """Perform a search using the MCP Google Custom Search Server."""
         try:
             response = requests.post(
                 f"{self.mcp_server_url}/search",
@@ -41,6 +44,7 @@ class MCPGoogleSearch:
 
 @tool
 def mcp_google_search(query: str, num_results: int = 10) -> str:
+    """Perform a Google search using the MCP Google Custom Search Server."""
     try:
         searcher = MCPGoogleSearch()
         results = searcher.search(query, num_results)
