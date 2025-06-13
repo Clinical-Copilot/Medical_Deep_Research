@@ -60,6 +60,7 @@ static/browser_history/*.gif
 
 # user conf
 .langgraph_api/
+CLAUDE.md
 
 # coverage report
 coverage.xml
