@@ -20,6 +20,14 @@ from src.tools import (
     crawl_tool,
     openai_search_tool,
     python_repl_tool,
+    get_drug_warnings,
+    get_drug_mechanisms,
+    get_drugs_for_disease,
+    get_disease_targets,
+    get_target_disease_evidence,
+    get_similar_drugs,
+    get_drug_withdrawal_status,
+    list_available_biomedical_tools,
 )
 
 from src.config.agents import AGENT_LLM_MAP
@@ -356,11 +364,15 @@ async def researcher_node(
     """Researcher node that do research"""
     logger.info("Researcher node is researching.")
     configurable = Configuration.from_runnable_config(config)
+    # Default tools for researcher including ToolUniverse biomedical tools
+    researcher_tools = [
+    ]
+    
     return await _setup_and_execute_agent_step(
         state,
         config,
         "researcher",
-        [openai_search_tool, crawl_tool],
+        [crawl_tool],
     )
 
 
