@@ -16,6 +16,7 @@ def evaluate_results(results: List[Dict]) -> Dict:
         "unique_domains": len(set(r.get("domain", "") for r in results)),
         "avg_snippet_length": sum(len(r.get("snippet", "")) for r in results) / len(results) if results else 0,
         "has_authoritative_sources": any(
+            #Yingtao Luo: verify and add more authoritative sources
             domain in ["www.cdc.gov", "www.who.int", "www.nih.gov", "www.mayoclinic.org", "www.nhs.uk"]
             for domain in [r.get("domain", "") for r in results]
         )

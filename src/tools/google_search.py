@@ -8,10 +8,13 @@ import logging
 from scholarly import scholarly  
 from typing import Annotated, Dict, Any
 from googleapiclient.discovery import build 
+from dotenv import load_dotenv
 from langchain_core.tools import tool
 from .decorators import log_io
 
 logger = logging.getLogger(__name__)
+
+load_dotenv()
 
 def get_search_service():
     """Get Google Custom Search service."""
