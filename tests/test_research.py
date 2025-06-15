@@ -10,14 +10,11 @@ sys.path.insert(0, str(project_root))
 from src.llms.llm import get_llm_by_type
 from src.config.agents import AGENT_LLM_MAP
 from src.tools import crawl_tool
-<<<<<<< HEAD
 from src.tools.litesense import litesense_tool
 from src.tools.google_search import google_search
 from src.tools.openai_search import openai_search_tool
-=======
 from src.tools import weather_tool
 from src.tools import get_drug_warnings_by_drug_name
->>>>>>> 39b4837 (added one tool)
 from langchain_mcp_adapters.client import MultiServerMCPClient
 from langgraph.prebuilt import create_react_agent
 
@@ -74,8 +71,8 @@ async def test_research():
     
     # Get default tools
 
-    # loaded_tools = [get_drug_warnings_by_drug_name]
     loaded_tools = [crawl_tool]
+    # loaded_tools = [get_drug_warnings_by_drug_name]
     
     # Get tools from MCP servers
     try:
