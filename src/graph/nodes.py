@@ -357,11 +357,7 @@ async def _setup_and_execute_agent_step(
                     f"Powered by '{enabled_tools[tool.name]}'.\n{tool.description}"
                 )
                 loaded_tools.append(tool)
-        agent = create_agent(agent_type, agent_type, loaded_tools, agent_type)
-        return await _execute_agent_step(state, agent, agent_type)
-    else:
-        # Use default tools if no MCP servers are configured
-        agent = create_agent(agent_type, agent_type, default_tools, agent_type)
+        agent = create_agent(agent_type, default_tools, agent_type)
         return await _execute_agent_step(state, agent, agent_type)
 
 

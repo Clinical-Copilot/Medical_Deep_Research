@@ -62,7 +62,9 @@ static/browser_history/*.gif
 .langgraph_api/
 CLAUDE.md
 
-# coverage report
+# some testing files
 coverage.xml
 coverage/
 meddr_env/
+*.ipynb
+test_google.py
