@@ -66,7 +66,7 @@ async def test_research():
     client = MultiServerMCPClient(mcp_servers)
     
     # Get default tools
-    loaded_tools = [divide, crawl_tool, multiply]
+    loaded_tools = [crawl_tool]
     
     # Get tools from MCP servers
     try:
@@ -134,7 +134,7 @@ Problem-Solving Process:
     
     # Test queries
     test_queries = [
-        "If I multiply 5 thousands by 1245923 and then divide the result by 777, what do I get?"
+        
     ]
     
     for query in test_queries:
