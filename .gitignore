@@ -68,3 +68,4 @@ coverage/
 meddr_env/
 *.ipynb
 test_google.py
+query_processor.py
