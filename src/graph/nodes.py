@@ -15,10 +15,10 @@ from langgraph.types import Command, interrupt
 from langchain_mcp_adapters.client import MultiServerMCPClient
 
 from src.agents import create_agent
-from src.tools.search import LoggedArxivSearch
+from src.tools.openai_search import openai_search_tool
 from src.tools import (
     crawl_tool,
-    get_web_search_tool,
+    openai_search_tool,
     python_repl_tool,
 )
 
@@ -246,7 +246,7 @@ async def _execute_agent_step(
     if agent_name == "researcher":
         agent_input["messages"].append(
             HumanMessage(
-                content="IMPORTANT: DO NOT include inline citations in the text. Instead, track all sources and include a References section at the end using link reference format. Include an empty line between each citation for better readability. Use this format for each reference:\n- [Source Title](URL)\n\n- [Another Source](URL)",
+                content="IMPORTANT: Use inline citations and a final “### References” section.  \nInline citations – place [tag] immediately after each claim; tag = first author’s surname (or first significant title word if no author) + last two digits of year, e.g. [smith24]; add “-a”, “-b”… if needed to keep tags unique; reuse the same tag for repeat citations.  \nReferences – append “### References” after the text; list every unique tag in the order it first appears, one per line with a blank line between, formatted **[tag]** [Full Source Title](URL). Show URLs only here.  \nNo other citation style.",
                 name="system",
             )
         )
@@ -357,7 +357,7 @@ async def _setup_and_execute_agent_step(
                     f"Powered by '{enabled_tools[tool.name]}'.\n{tool.description}"
                 )
                 loaded_tools.append(tool)
-        agent = create_agent(agent_type, default_tools, agent_type)
+        agent = create_agent(agent_type, agent_type, default_tools, agent_type)
         return await _execute_agent_step(state, agent, agent_type)
 
 
@@ -371,7 +371,7 @@ async def researcher_node(
         state,
         config,
         "researcher",
-        [get_web_search_tool(configurable.max_search_results), crawl_tool],
+        [openai_search_tool, crawl_tool],
     )
 
 

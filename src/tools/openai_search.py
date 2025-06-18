@@ -8,7 +8,8 @@ from urllib.parse import urlsplit, urlunsplit, parse_qsl, urlencode, unquote
 from openai import OpenAI
 from dotenv import load_dotenv
 from langchain_core.tools import tool
-from .decorators import log_io
+from .decorators import process_queries
+from .query_processor import QueryStrategy
 
 load_dotenv()
 logger = logging.getLogger(__name__)
@@ -25,22 +26,17 @@ def _clean_urls(urls: List[str]) -> List[str]:
         if not raw:
             continue
 
-        # 1) Tidy up obvious whitespace / % encoding
         raw = unquote(raw.strip())
 
-        # 2) Parse into components
         parts = urlsplit(raw)
 
-        # 3) Normalise scheme + netloc
         scheme = parts.scheme.lower() or "https"
         netloc = parts.netloc.lower()
         if netloc.startswith("www."):
             netloc = netloc[4:]
 
-        # 4) Keep path, but drop a lone trailing slash
         path = parts.path.rstrip("/") or "/"
 
-        # 5) Remove tracking params, keep the rest (sorted for stability)
         query_items = [
             (k, v)
             for k, v in parse_qsl(parts.query, keep_blank_values=True)
@@ -48,17 +44,13 @@ def _clean_urls(urls: List[str]) -> List[str]:
         ]
         query = urlencode(sorted(query_items), doseq=True)
 
-        # 6) Re-assemble without the fragment
         canonical = urlunsplit((scheme, netloc, path, query, ""))
 
-        # 7) Deduplicate
         if canonical not in seen:
             seen.add(canonical)
             cleaned.append(canonical)
 
     return cleaned
-
-
 
 def _extract_urls_from_text(text: str) -> List[str]:
     """Return every http(s) URL in free-form text."""
@@ -89,8 +81,11 @@ def _extract_urls_from_metadata(msg: Any) -> List[str]:
     return urls
 
 @tool
-@log_io
-def openai_search_tool(
+@process_queries(
+    strategy=QueryStrategy.PARAPHRASE,
+    max_variations=3
+)
+async def openai_search_tool(
     query: Annotated[str, "The search query to send to OpenAI."],
 ) -> Dict[str, Any]:
     """
@@ -105,17 +100,20 @@ def openai_search_tool(
         client = OpenAI()
 
         completion = client.chat.completions.create(
-            model="gpt-4o-mini-search-preview",
-            web_search_options={"search_context_size": "high"},
+            model="gpt-4-turbo-preview",
             messages=[{"role": "user", "content": query}],
         )
 
-        msg      = completion.choices[0].message
-        answer   = msg.model_dump()["content"]
-        urls     = _extract_urls_from_metadata(msg) or _extract_urls_from_text(answer)
-        urls     = _clean_urls(urls)
+        msg = completion.choices[0].message
+        answer = msg.content
+        urls = _extract_urls_from_metadata(msg) or _extract_urls_from_text(answer)
+        urls = _clean_urls(urls)
 
-        return {"query": query, "answer": answer, "urls": urls}
+        return {
+            "query": query,
+            "answer": answer,
+            "urls": urls
+        }
 
     except Exception as exc:
         error = f"OpenAI search failed: {exc!r}"
