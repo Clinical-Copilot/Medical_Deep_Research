@@ -11,6 +11,8 @@ from .openai_search import openai_search_tool
 from .search import get_web_search_tool
 from .tooluniverse_regulations import (
     get_drug_warnings_by_drug_name,
+    get_boxed_warning_info_by_drug_name,
+    get_drug_names_by_controlled_substance_DEA_schedule,
 )
 
 __all__ = [
@@ -31,4 +33,6 @@ __all__ = [
     # "list_available_biomedical_tools",
     "get_web_search_tool",
     "get_drug_warnings_by_drug_name",
+    "get_boxed_warning_info_by_drug_name",
+    "get_drug_names_by_controlled_substance_DEA_schedule",
     ]

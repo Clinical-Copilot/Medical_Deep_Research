@@ -15,6 +15,11 @@ from src.tools.google_search import google_search
 from src.tools.openai_search import openai_search_tool
 from src.tools import weather_tool
 from src.tools import get_drug_warnings_by_drug_name
+from src.tools import (
+    get_drug_warnings_by_drug_name,
+    get_boxed_warning_info_by_drug_name,
+    get_drug_names_by_controlled_substance_DEA_schedule,
+)
 from langchain_mcp_adapters.client import MultiServerMCPClient
 from langgraph.prebuilt import create_react_agent
 
@@ -70,10 +75,14 @@ async def test_research():
     client = MultiServerMCPClient(mcp_servers)
     
     # Get default tools
-
     loaded_tools = [crawl_tool]
-    # loaded_tools = [get_drug_warnings_by_drug_name]
-    
+
+    loaded_tools = [
+        get_drug_warnings_by_drug_name,
+        get_boxed_warning_info_by_drug_name,
+        get_drug_names_by_controlled_substance_DEA_schedule,
+    ]
+
     # Get tools from MCP servers
     try:
         tools = await client.get_tools()

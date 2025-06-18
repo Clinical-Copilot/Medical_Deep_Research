@@ -1,0 +1,68 @@
+1. 
+FDA_get_boxed_warning_info_by_drug_name
+
+Retrieve boxed warning and adverse effects information for a specific drug.
+(Boxed warnings are a regulatory requirement by FDA for serious/life-threatening risks)
+
+
+2. 
+FDA_get_controlled_substance_DEA_schedule_info_by_drug_name
+
+Retrieve information about the controlled substance Drug Enforcement Administration (DEA) schedule for a specific drug.
+(DEA schedule is federally regulated and central to drug regulation)
+
+
+3. 
+FDA_get_document_id_by_drug_name
+
+Retrieve the document ID based on the drug name.
+(Regulatory compliance often tracks specific FDA document IDs for traceability)
+
+
+4. 
+FDA_get_drug_names_by_boxed_warning
+
+Retrieve drug names that have specific boxed warnings and adverse effects.
+(Helps in regulatory review and labeling compliance)
+
+
+5. 
+FDA_get_drug_names_by_warnings_and_cautions
+
+Retrieve drug names based on specific warnings and cautions information.
+(FDA requires labeling of warnings/cautions as part of regulatory approval)
+
+
+6. 
+FDA_get_recent_changes_by_drug_name
+
+Retrieve recent major changes in labeling for a specific drug.
+(Labeling changes are part of FDA regulatory process)
+
+
+7. 
+FDA_get_user_safety_warning_by_drug_names
+
+Retrieve specific user safety warnings based on drug names.
+(User safety warnings are FDA mandated)
+
+
+8. 
+FDA_get_residue_warning_by_drug_name
+
+Retrieve the residue warning based on drug name.
+(Certain drugs, especially veterinary, have regulatory residue limits)
+
+
+9. 
+FDA_get_spl_indexing_data_elements_by_drug_name
+
+Retrieve Structured Product Labeling (SPL) indexing data elements based on drug names.
+(SPL is an FDA standard for regulatory labeling data)
+
+
+10. 
+FDA_get_drug_names_by_safety_summary
+
+Retrieve drug names based on the summary of safety and effectiveness information.
+(Safety summaries are essential for regulatory submissions and reviews)
