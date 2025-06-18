@@ -11,7 +11,7 @@ sys.path.insert(0, str(project_root))
 from src.llms.llm import get_llm_by_type
 from src.config.agents import AGENT_LLM_MAP
 from src.tools import crawl_tool
-from src.tools.google_search import google_search
+from src.tools.openai_search import openai_search
 from src.tools.query_processor import QueryProcessor, LLMExpansionStrategy
 from langchain_mcp_adapters.client import MultiServerMCPClient
 from langgraph.prebuilt import create_react_agent
@@ -66,7 +66,7 @@ async def test_research():
     client = MultiServerMCPClient(mcp_servers)
     
     # Get default tools
-    loaded_tools = [crawl_tool]
+    loaded_tools = [crawl_tool, openai_search]
     
     # Get tools from MCP servers
     try:
@@ -134,7 +134,9 @@ Problem-Solving Process:
     
     # Test queries
     test_queries = [
-        
+        "What are the latest developments in quantum computing?",
+        "How does climate change affect marine ecosystems?",
+        "What are the key features of the latest iPhone model?"
     ]
     
     for query in test_queries:

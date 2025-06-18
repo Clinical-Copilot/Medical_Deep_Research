@@ -11,6 +11,7 @@ from src.llms.llm import get_llm_by_type
 from src.config.agents import AGENT_LLM_MAP
 from src.tools import crawl_tool
 from src.tools.google_search import google_search
+from src.tools.openai_search import openai_search_tool
 from langchain_mcp_adapters.client import MultiServerMCPClient
 from langgraph.prebuilt import create_react_agent
 
@@ -66,7 +67,7 @@ async def test_research():
     client = MultiServerMCPClient(mcp_servers)
     
     # Get default tools
-    loaded_tools = [crawl_tool, google_search]
+    loaded_tools = [openai_search_tool]
     
     # Get tools from MCP servers
     try:
@@ -77,9 +78,8 @@ async def test_research():
                     f"Powered by '{enabled_tools[tool.name]}'.\n{tool.description}"
                 )
                 loaded_tools.append(tool)
-        print(f"Loaded {len(loaded_tools)} tools")
     except Exception as e:
-        print(f"Error loading tools: {e}")
+        logger.error(f"Error loading tools: {e}")
         loaded_tools = []  # Fallback to empty tools list if MCP fails
 
     # Create the agent with MCP tools
@@ -90,7 +90,7 @@ async def test_research():
         prompt="""You are a biomedical research assistant that helps gather comprehensive information from multiple sources.
         Use the available tools to find and analyze information from various biomedical sources.
         Focus on peer-reviewed articles, clinical trials, and medical research papers.
-        Make sure to clearly label which information comes from which source. DO NOT include inline citations in the text. Instead, track all sources and include a References section at the end using link reference format. Include an empty line between each citation for better readability. Use this format for each reference:\n- [Source Title](URL)\n\n- [Another Source](URL)""",
+        Make sure to clearly label which information comes from which source. I also need smart incline citations with smart abbreviations in the text. Need the incline citation to match the references ta the final. Track all sources and include a References section at the end using link reference format. Include an empty line between each citation for better readability. Use this format for each reference:\n- [Source Title](URL)\n\n- [Another Source](URL)""",
         name="biomedical_research_assistant"
     )
     
@@ -100,7 +100,7 @@ async def test_research():
     ]
     
     for query in test_queries:
-        print(f"\nQuery: {query}")
+        logger.info(f"\nQuery: {query}")
         result = await agent.ainvoke({
             "messages": [{
                 "role": "user",
@@ -109,15 +109,7 @@ async def test_research():
         })
         
         messages = result.get("messages", [])
-        print(messages)
-        # assert messages, "No messages were returned"
-        
-        # # Print the results in a cleaner format
-        # for message in messages:
-        #     if hasattr(message, 'content'):
-        #         print(f"\n{message.content}")
-        #     else:
-        #         print(f"\n{message}")
+        print(messages[-1].content)
 
 if __name__ == "__main__":
     asyncio.run(test_research()) 
