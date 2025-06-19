@@ -1,3 +1,4 @@
+# The project is built upon Bytedance MedDR
 # SPDX-License-Identifier: MIT
 
 import logging
@@ -8,8 +9,8 @@ from urllib.parse import urlsplit, urlunsplit, parse_qsl, urlencode, unquote
 from openai import OpenAI
 from dotenv import load_dotenv
 from langchain_core.tools import tool
-from .decorators import process_queries
-from .query_processor import QueryStrategy
+from src.tools.decorators import process_queries
+from src.utils.query_processor import QueryStrategy
 
 load_dotenv()
 logger = logging.getLogger(__name__)
@@ -100,7 +101,8 @@ async def openai_search_tool(
         client = OpenAI()
 
         completion = client.chat.completions.create(
-            model="gpt-4-turbo-preview",
+            model="gpt-4o-mini-search-preview",
+            web_search_options={"search_context_size": "high"},
             messages=[{"role": "user", "content": query}],
         )
 

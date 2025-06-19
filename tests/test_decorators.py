@@ -2,7 +2,7 @@ import pytest
 from unittest.mock import AsyncMock, patch
 from typing import Dict, List, Any
 from src.tools.decorators import process_queries
-from src.tools.query_processor import QueryStrategy
+from src.utils.query_processor import QueryStrategy
 
 # Mock tool functions for testing
 @process_queries(strategy=QueryStrategy.PARAPHRASE, max_variations=2)
@@ -116,7 +116,7 @@ async def test_decorator_partial_failures():
 @pytest.mark.asyncio
 async def test_decorator_llm_failure_recovery():
     """Test recovery from LLM failures in query processing"""
-    with patch("src.tools.query_processor.QueryProcessor.process_query") as mock_process:
+    with patch("src.utils.query_processor.QueryProcessor.process_query") as mock_process:
         mock_process.side_effect = Exception("LLM failed")
         
         result = await mock_search_tool("test query")

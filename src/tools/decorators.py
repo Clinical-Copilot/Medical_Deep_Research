@@ -5,7 +5,7 @@ import logging
 import functools
 from typing import Any, Callable, Type, TypeVar, List, Dict, Union
 from functools import wraps
-from .query_processor import QueryProcessor, ToolDescription, QueryStrategy, QueryProcessingError
+from src.utils.query_processor import QueryProcessor, ToolDescription, QueryStrategy, QueryProcessingError
 
 logger = logging.getLogger(__name__)
 
@@ -82,7 +82,6 @@ def create_logged_tool(base_tool_class: Type[T]) -> Type[T]:
     LoggedTool.__name__ = f"Logged{base_tool_class.__name__}"
     return LoggedTool
 
-
 def process_queries(
     strategy: QueryStrategy,
     max_variations: int = 3,
@@ -128,10 +127,14 @@ def process_queries(
                 
                 for processed_query in processed_queries:
                     try:
-                        # Preserve all original arguments
+                        # Log the actual input parameters being passed to the tool
                         if args:
+                            tool_args = (processed_query,) + other_args
+                            logger.info(f"Tool {func.__name__} called with args: {tool_args}, kwargs: {kwargs}")
                             result = await func(processed_query, *other_args, **kwargs)  # Include kwargs
                         else:
+                            tool_kwargs = {"query": processed_query, **kwargs}
+                            logger.info(f"Tool {func.__name__} called with kwargs: {tool_kwargs}")
                             result = await func(query=processed_query, **kwargs)
                             
                         if isinstance(result, dict) and "error" in result:

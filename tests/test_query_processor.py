@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import Mock, AsyncMock
-from src.tools.query_processor import (
+from src.utils.query_processor import (
     QueryProcessor,
     QueryStrategy,
     ToolDescription,
