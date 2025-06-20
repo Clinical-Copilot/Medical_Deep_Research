@@ -79,7 +79,8 @@ async def run_agent_workflow_async(
     user_input: str,
     debug: bool = False,
     max_plan_iterations: int = 1,
-    max_step_num: int = 2  # Reduced to prevent deep recursion
+    max_step_num: int = 2,  # Reduced to prevent deep recursion
+    output_format: str = "long-report"
 ):
     """Run the agent workflow asynchronously with the given user input.
 
@@ -88,6 +89,7 @@ async def run_agent_workflow_async(
         debug: If True, enables debug level logging
         max_plan_iterations: Maximum number of plan iterations
         max_step_num: Maximum number of steps in a plan
+        output_format: Output format - "long-report" or "short-report" (default: "long-report")
 
     Returns:
         The final state after the workflow completes
@@ -109,6 +111,7 @@ async def run_agent_workflow_async(
             "thread_id": "default",
             "max_plan_iterations": max_plan_iterations,
             "max_step_num": max_step_num,
+            "output_format": output_format,
             "mcp_settings": {
                 "servers": {
                     "mcp-github-trending": {

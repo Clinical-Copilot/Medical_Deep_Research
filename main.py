@@ -18,7 +18,8 @@ def ask(
     question,
     debug=False,
     max_plan_iterations=1,
-    max_step_num=3
+    max_step_num=3,
+    output_format="long-report"
 ):
     """Run the agent workflow with the given question.
 
@@ -27,14 +28,15 @@ def ask(
         debug: If True, enables debug level logging
         max_plan_iterations: Maximum number of plan iterations
         max_step_num: Maximum number of steps in a plan
-        enable_background_investigation: If True, performs web search before planning to enhance context
+        output_format: Output format - "long-report" or "short-report" (default: "long-report")
     """
     asyncio.run(
         run_agent_workflow_async(
             user_input=question,
             debug=debug,
             max_plan_iterations=max_plan_iterations,
-            max_step_num=max_step_num
+            max_step_num=max_step_num,
+            output_format=output_format
         )
     )
 
@@ -42,15 +44,16 @@ def ask(
 def main(
     debug=False,
     max_plan_iterations=1,
-    max_step_num=3
+    max_step_num=3,
+    output_format="long-report"
 ):
     """Interactive mode with built-in questions.
 
     Args:
-        enable_background_investigation: If True, performs web search before planning to enhance context
         debug: If True, enables debug level logging
         max_plan_iterations: Maximum number of plan iterations
         max_step_num: Maximum number of steps in a plan
+        output_format: Output format - "long-report" or "short-report" (default: "long-report")
     """
     # Choose questions
     questions = BUILT_IN_QUESTIONS
@@ -72,7 +75,8 @@ def main(
         question=initial_question,
         debug=debug,
         max_plan_iterations=max_plan_iterations,
-        max_step_num=max_step_num
+        max_step_num=max_step_num,
+        output_format=output_format
     )
 
 
@@ -101,6 +105,12 @@ if __name__ == "__main__":
         action="store_true", 
         help="Enable debug logging"
     )
+    parser.add_argument(
+        "--output_format",
+        type=str,
+        default="long-report",
+        help="Output format - 'long-report' or 'short-report' (default: 'long-report')",
+    )
 
     args = parser.parse_args()
 
@@ -109,7 +119,8 @@ if __name__ == "__main__":
         main(
             debug=args.debug,
             max_plan_iterations=args.max_plan_iterations,
-            max_step_num=args.max_step_num
+            max_step_num=args.max_step_num,
+            output_format=args.output_format
         )
     else:
         # Parse user input from command line arguments or user input
@@ -123,5 +134,6 @@ if __name__ == "__main__":
             question=user_query,
             debug=args.debug,
             max_plan_iterations=args.max_plan_iterations,
-            max_step_num=args.max_step_num
+            max_step_num=args.max_step_num,
+            output_format=args.output_format
         )

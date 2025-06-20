@@ -246,7 +246,7 @@ async def _execute_agent_step(
     if agent_name == "researcher":
         agent_input["messages"].append(
             HumanMessage(
-                content="IMPORTANT: Use inline citations and a final “### References” section.  \nInline citations – place [tag] immediately after each claim; tag = first author’s surname (or first significant title word if no author) + last two digits of year, e.g. [smith24]; add “-a”, “-b”… if needed to keep tags unique; reuse the same tag for repeat citations.  \nReferences – append “### References” after the text; list every unique tag in the order it first appears, one per line with a blank line between, formatted **[tag]** [Full Source Title](URL). Show URLs only here.  \nNo other citation style.",
+                content="IMPORTANT: Use inline citations and a final \"### References\" section.  \nInline citations – place [tag] immediately after each claim; tag = first author's surname (or first significant title word if no author) + last two digits of year, e.g. [smith24]; add \"-a\", \"-b\"... if needed to keep tags unique; reuse the same tag for repeat citations.  \nReferences – append \"### References\" after the text; list every unique tag in the order it first appears, one per line with a blank line between, formatted **[tag]** [Full Source Title](URL). Show URLs only here.  \nNo other citation style.",
                 name="system",
             )
         )
@@ -259,24 +259,14 @@ async def _execute_agent_step(
     # Invoke the agent
     default_recursion_limit = 10
     try:
-        env_value_str = os.getenv("AGENT_RECURSION_LIMIT", str(default_recursion_limit))
-        parsed_limit = int(env_value_str)
-
-        if parsed_limit > 0:
-            recursion_limit = parsed_limit
-            logger.info(f"Recursion limit set to: {recursion_limit}")
-        else:
-            logger.warning(
-                f"AGENT_RECURSION_LIMIT value '{env_value_str}' (parsed as {parsed_limit}) is not positive. "
-                f"Using default value {default_recursion_limit}."
-            )
+        recursion_limit = int(os.getenv("AGENT_RECURSION_LIMIT", str(default_recursion_limit)))
+        if recursion_limit <= 0:
+            logger.warning(f"AGENT_RECURSION_LIMIT must be positive, using default: {default_recursion_limit}")
             recursion_limit = default_recursion_limit
+        else:
+            logger.info(f"Recursion limit set to: {recursion_limit}")
     except ValueError:
-        raw_env_value = os.getenv("AGENT_RECURSION_LIMIT")
-        logger.warning(
-            f"Invalid AGENT_RECURSION_LIMIT value: '{raw_env_value}'. "
-            f"Using default value {default_recursion_limit}."
-        )
+        logger.warning(f"Invalid AGENT_RECURSION_LIMIT value, using default: {default_recursion_limit}")
         recursion_limit = default_recursion_limit
 
     result = await agent.ainvoke(
@@ -303,7 +293,6 @@ async def _execute_agent_step(
         },
         goto="research_team",
     )
-
 
 async def _setup_and_execute_agent_step(
     state: State,
@@ -387,10 +376,15 @@ async def coder_node(
         [python_repl_tool],
     )
 
-def reporter_node(state: State):
+def reporter_node(state: State, config: RunnableConfig = None):
     """Reporter node that write a final report."""
     logger.info("Reporter write final report")
     current_plan = state.get("current_plan")
+    
+    # Get configuration
+    configurable = Configuration.from_runnable_config(config) if config else Configuration()
+    output_format = configurable.output_format
+    
     input_ = {
         "messages": [
             HumanMessage(
@@ -398,13 +392,24 @@ def reporter_node(state: State):
             )
         ],
     }
-    invoke_messages = apply_prompt_template("reporter", input_)
+    
+    # Use different prompt template based on output format
+    if output_format == "short-report":
+        invoke_messages = apply_prompt_template("short_reporter", input_)
+    else:  # long-report (default)
+        invoke_messages = apply_prompt_template("long_reporter", input_)
+    
     observations = state.get("observations", [])
 
-    # Add a reminder about the new report format, citation style, and table usage
+    # Add format-specific reminder
+    if output_format == "short-report":
+        format_reminder = "IMPORTANT: Provide a concise answer with key points only. Focus on the most essential findings in 2-3 sentences. Be direct and to the point."
+    else:  # long-report (default)
+        format_reminder = "IMPORTANT: Structure your report according to the format in the prompt. Remember to include:\n\n1. Key Points - A bulleted list of the most important findings\n2. Overview - A brief introduction to the topic\n3. Detailed Analysis - Organized into logical sections\n4. Survey Note (optional) - For more comprehensive reports\n5. Key Citations - List all references at the end\n\nFor citations, DO NOT include inline citations in the text. Instead, place all citations in the 'Key Citations' section at the end using the format: `- [Source Title](URL)`. Include an empty line between each citation for better readability.\n\nPRIORITIZE USING MARKDOWN TABLES for data presentation and comparison. Use tables whenever presenting comparative data, statistics, features, or options. Structure tables with clear headers and aligned columns. Example table format:\n\n| Feature | Description | Pros | Cons |\n|---------|-------------|------|------|\n| Feature 1 | Description 1 | Pros 1 | Cons 1 |\n| Feature 2 | Description 2 | Pros 2 | Cons 2 |"
+
     invoke_messages.append(
         HumanMessage(
-            content="IMPORTANT: Structure your report according to the format in the prompt. Remember to include:\n\n1. Key Points - A bulleted list of the most important findings\n2. Overview - A brief introduction to the topic\n3. Detailed Analysis - Organized into logical sections\n4. Survey Note (optional) - For more comprehensive reports\n5. Key Citations - List all references at the end\n\nFor citations, DO NOT include inline citations in the text. Instead, place all citations in the 'Key Citations' section at the end using the format: `- [Source Title](URL)`. Include an empty line between each citation for better readability.\n\nPRIORITIZE USING MARKDOWN TABLES for data presentation and comparison. Use tables whenever presenting comparative data, statistics, features, or options. Structure tables with clear headers and aligned columns. Example table format:\n\n| Feature | Description | Pros | Cons |\n|---------|-------------|------|------|\n| Feature 1 | Description 1 | Pros 1 | Cons 1 |\n| Feature 2 | Description 2 | Pros 2 | Cons 2 |",
+            content=format_reminder,
             name="system",
         )
     )
@@ -416,11 +421,12 @@ def reporter_node(state: State):
                 name="observation",
             )
         )
-    logger.debug(f"Current invoke messages: {invoke_messages}")
+
+    
     response = get_llm_by_type(AGENT_LLM_MAP["reporter"]).invoke(invoke_messages)
     response_content = response.content
     logger.info(f"reporter response: {response_content}")
-
+    
     return {"final_report": response_content}
 
 def node(func: Callable) -> Callable:
