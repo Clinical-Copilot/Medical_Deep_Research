@@ -10,6 +10,7 @@ sys.path.insert(0, str(project_root))
 from src.llms.llm import get_llm_by_type
 from src.config.agents import AGENT_LLM_MAP
 from src.tools import crawl_tool
+from src.tools.litesense import litesense_tool
 from src.tools.google_search import google_search
 from src.tools.openai_search import openai_search_tool
 from langchain_mcp_adapters.client import MultiServerMCPClient
@@ -67,7 +68,7 @@ async def test_research():
     client = MultiServerMCPClient(mcp_servers)
     
     # Get default tools
-    loaded_tools = [openai_search_tool]
+    loaded_tools = [litesense_tool]
     
     # Get tools from MCP servers
     try:

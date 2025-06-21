@@ -8,6 +8,7 @@ from typing import Annotated, List, Dict, Any, Set
 from urllib.parse import urlsplit, urlunsplit, parse_qsl, urlencode, unquote
 from openai import OpenAI
 from dotenv import load_dotenv
+from .decorators import log_io
 from langchain_core.tools import tool
 from src.tools.decorators import process_queries
 from src.utils.query_processor import QueryStrategy
@@ -66,13 +67,11 @@ def _extract_urls_from_metadata(msg: Any) -> List[str]:
     """
     urls: List[str] = []
 
-    # —— Format 1 —————————————————————————————
     meta = getattr(msg, "metadata", None) or {}    
     for c in meta.get("citations", []):
         if isinstance(c, dict) and c.get("url"):
             urls.append(c["url"])
 
-    # —— Format 2 —————————————————————————————
     tool_calls = getattr(msg, "tool_calls", None) or []
     for call in tool_calls:
         citation = getattr(call, "citation", None)
@@ -82,6 +81,7 @@ def _extract_urls_from_metadata(msg: Any) -> List[str]:
     return urls
 
 @tool
+@log_io
 @process_queries(
     strategy=QueryStrategy.PARAPHRASE,
     max_variations=3

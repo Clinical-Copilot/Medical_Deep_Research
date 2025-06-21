@@ -48,6 +48,7 @@ class QueryStrategy(Enum):
     DIRECT = "direct"
     PARAPHRASE = "paraphrase"
     EXPAND = "expand"
+    LITESENSE = "litesense"
 
 @dataclass
 class ToolDescription:

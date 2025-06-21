@@ -13,7 +13,6 @@ from .openai_search import openai_search_tool
 __all__ = [
     "crawl_tool",
     "python_repl_tool",
-    #"get_web_search_tool",  # Removed
     "mcp_google_search",
     "litesense_tool",
     "openai_search_tool"
