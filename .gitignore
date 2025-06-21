@@ -67,10 +67,13 @@ changes.md
 
 # some testing files
 coverage.xml
+
 coverage/
 meddr_env/
 *.ipynb
 test_google.py
 
 CLAUDE.md
+
+coverage/meddr_env/
 meddr_env/
