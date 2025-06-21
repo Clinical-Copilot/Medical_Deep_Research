@@ -130,7 +130,7 @@ async def _astream_workflow_generator(
             "max_plan_iterations": max_plan_iterations,
             "max_step_num": max_step_num,
             "max_search_results": max_search_results,
-            "mcp_settings": mcp_settings,
+            "mcp_settin  gs": mcp_settings,
         },
         stream_mode=["messages", "updates"],
         subgraphs=True,

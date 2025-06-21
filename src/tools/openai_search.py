@@ -9,8 +9,8 @@ from urllib.parse import urlsplit, urlunsplit, parse_qsl, urlencode, unquote
 from openai import OpenAI
 from dotenv import load_dotenv
 from langchain_core.tools import tool
-from src.tools.decorators import process_queries
-from src.utils.query_processor import QueryStrategy
+# from src.tools.decorators import process_queries
+# from src.utils.query_processor import QueryStrategy
 
 load_dotenv()
 logger = logging.getLogger(__name__)
@@ -82,10 +82,10 @@ def _extract_urls_from_metadata(msg: Any) -> List[str]:
     return urls
 
 @tool
-@process_queries(
-    strategy=QueryStrategy.PARAPHRASE,
-    max_variations=3
-)
+# @process_queries(
+#     strategy=QueryStrategy.PARAPHRASE,
+#     max_variations=3
+# )
 async def openai_search_tool(
     query: Annotated[str, "The search query to send to OpenAI."],
 ) -> Dict[str, Any]:
