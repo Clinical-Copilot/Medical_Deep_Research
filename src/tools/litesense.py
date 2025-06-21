@@ -11,7 +11,9 @@ from src.utils.query_processor import QueryStrategy
 logger = logging.getLogger(__name__)
 
 ## TODO: 
-#  1. Try to improve my description of the tool (the current version might not be accurate)
+#  1. Try to improve the description of the tool (the current version might not be accurate)
+#  2. wrapper
+#  3. Try use the entire paper?
 
 @tool
 @log_io
