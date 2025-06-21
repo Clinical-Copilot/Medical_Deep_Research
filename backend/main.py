@@ -60,6 +60,7 @@ async def chat(request: ChatRequest):
         # Process the workflow result
         workflow_steps = []
         final_report = None
+        coordinator_response = None
         
         if isinstance(result, dict):
             # Extract messages and convert them to workflow steps
@@ -69,6 +70,11 @@ async def chat(request: ChatRequest):
                         content = msg.get("content", "")
                         role = msg.get("role", "system")
                         name = msg.get("name", "")
+                        
+                        # Handle coordinator messages specially - don't convert to workflow steps
+                        if name == "coordinator" and content:
+                            coordinator_response = content
+                            continue
                         
                         if role == "assistant" and content:
                             # This is likely the final report
@@ -136,7 +142,7 @@ async def chat(request: ChatRequest):
                 "workflow_steps": [step.dict() for step in workflow_steps],
                 "plan": plan,
                 "report": final_report,
-                "coordinator_response": result.get("coordinator_response", None)
+                "coordinator_response": coordinator_response or result.get("coordinator_response", None)
             }
         )
     except Exception as e:

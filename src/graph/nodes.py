@@ -67,6 +67,11 @@ def coordinator_node(
             f"Coordinator response contains no tool calls. Terminating workflow execution. Response: {response}"
         )
         logger.debug(f"Coordinator response: {response}")
+        # Add the coordinator's response to the messages when it terminates the workflow
+        return Command(
+            update={"messages": [AIMessage(content=response.content, name="coordinator")]},
+            goto=goto
+        )
 
     return Command(goto=goto)
 
