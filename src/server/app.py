@@ -26,7 +26,7 @@ from src.server.chat_request import (
     GeneratePodcastRequest,
     GeneratePPTRequest,
     GenerateProseRequest,
-    )
+)
 from src.server.mcp_request import MCPServerMetadataRequest, MCPServerMetadataResponse
 from src.server.mcp_utils import load_mcp_tools
 from src.workflow import run_agent_workflow_async
@@ -50,31 +50,32 @@ app.add_middleware(
 
 graph = build_graph_with_memory()
 
+
 class ChatRequest(BaseModel):
     query: str
+
 
 class ChatResponse(BaseModel):
     plan: Optional[Dict[str, Any]] = None
     report: Optional[str] = None
+
 
 @app.post("/api/chat", response_model=ChatResponse)
 async def chat(request: ChatRequest):
     try:
         # Run the workflow
         result = await run_agent_workflow_async(
-            user_input=request.query,
-            debug=True,
-            max_plan_iterations=1,
-            max_step_num=3
+            user_input=request.query, debug=True, max_plan_iterations=1, max_step_num=3
         )
-        
+
         # Extract plan and report from the result
         plan = result.get("current_plan")
         report = result.get("final_report")
-        
+
         return ChatResponse(plan=plan, report=report)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.post("/api/chat/stream")
 async def chat_stream(request: ChatRequest):
@@ -194,7 +195,6 @@ def _make_event(event_type: str, data: dict[str, any]):
     if data.get("content") == "":
         data.pop("content")
     return f"event: {event_type}\ndata: {json.dumps(data, ensure_ascii=False)}\n\n"
-
 
 
 @app.post("/api/podcast/generate")

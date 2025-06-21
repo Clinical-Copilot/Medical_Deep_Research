@@ -12,12 +12,14 @@ logger = logging.getLogger(__name__)
 # Global ToolUniverse engine instance
 _engine = None
 
+
 def get_tooluniverse_engine():
     """Get or create a ToolUniverse engine instance."""
     global _engine
     if _engine is None:
         try:
             from tooluniverse.execute_function import ToolUniverse
+
             _engine = ToolUniverse()
             _engine.load_tools()
             logger.info(f"ToolUniverse initialized with {len(_engine.all_tools)} tools")
@@ -31,10 +33,9 @@ def _run_tooluniverse_function(function_name: str, arguments: dict) -> dict:
     """Helper function to run ToolUniverse functions with error handling."""
     try:
         engine = get_tooluniverse_engine()
-        result = engine.run_one_function({
-            "name": function_name,
-            "arguments": arguments
-        })
+        result = engine.run_one_function(
+            {"name": function_name, "arguments": arguments}
+        )
         return result
     except Exception as e:
         error_msg = f"Failed to execute {function_name}. Error: {repr(e)}"
@@ -49,8 +50,7 @@ def get_drug_warnings(
 ) -> str:
     """Retrieve safety warnings for a specific drug using its ChEMBL ID."""
     result = _run_tooluniverse_function(
-        "OpenTargets_get_drug_warnings_by_chemblId",
-        {"chemblId": chembl_id}
+        "OpenTargets_get_drug_warnings_by_chemblId", {"chemblId": chembl_id}
     )
     return result
 
@@ -62,8 +62,7 @@ def get_drug_mechanisms(
 ) -> str:
     """Retrieve the mechanisms of action for a specific drug using its ChEMBL ID."""
     result = _run_tooluniverse_function(
-        "OpenTargets_get_drug_mechanisms_of_action_by_chemblId",
-        {"chemblId": chembl_id}
+        "OpenTargets_get_drug_mechanisms_of_action_by_chemblId", {"chemblId": chembl_id}
     )
     return result
 
@@ -71,17 +70,18 @@ def get_drug_mechanisms(
 @tool
 @log_io
 def get_drugs_for_disease(
-    disease_efo_id: Annotated[str, "EFO ID of the disease (e.g., 'EFO_0000685' for rheumatoid arthritis)"],
+    disease_efo_id: Annotated[
+        str, "EFO ID of the disease (e.g., 'EFO_0000685' for rheumatoid arthritis)"
+    ],
     limit: Annotated[Optional[int], "Maximum number of results to return"] = 10,
 ) -> str:
     """Retrieve known drugs associated with a specific disease using its EFO ID."""
     arguments = {"diseaseEfoId": disease_efo_id}
     if limit is not None:
         arguments["limit"] = limit
-    
+
     result = _run_tooluniverse_function(
-        "OpenTargets_get_associated_drugs_by_disease_efoId",
-        arguments
+        "OpenTargets_get_associated_drugs_by_disease_efoId", arguments
     )
     return result
 
@@ -89,17 +89,18 @@ def get_drugs_for_disease(
 @tool
 @log_io
 def get_disease_targets(
-    disease_efo_id: Annotated[str, "EFO ID of the disease (e.g., 'EFO_0000685' for rheumatoid arthritis)"],
+    disease_efo_id: Annotated[
+        str, "EFO ID of the disease (e.g., 'EFO_0000685' for rheumatoid arthritis)"
+    ],
     limit: Annotated[Optional[int], "Maximum number of results to return"] = 10,
 ) -> str:
     """Find targets associated with a specific disease using its EFO ID."""
     arguments = {"diseaseEfoId": disease_efo_id}
     if limit is not None:
         arguments["limit"] = limit
-    
+
     result = _run_tooluniverse_function(
-        "OpenTargets_get_associated_targets_by_disease_efoId",
-        arguments
+        "OpenTargets_get_associated_targets_by_disease_efoId", arguments
     )
     return result
 
@@ -112,16 +113,12 @@ def get_target_disease_evidence(
     limit: Annotated[Optional[int], "Maximum number of results to return"] = 10,
 ) -> str:
     """Explore evidence that supports a specific target-disease association."""
-    arguments = {
-        "targetEnsemblId": target_ensembl_id,
-        "diseaseEfoId": disease_efo_id
-    }
+    arguments = {"targetEnsemblId": target_ensembl_id, "diseaseEfoId": disease_efo_id}
     if limit is not None:
         arguments["limit"] = limit
-    
+
     result = _run_tooluniverse_function(
-        "OpenTargets_target_disease_evidence",
-        arguments
+        "OpenTargets_target_disease_evidence", arguments
     )
     return result
 
@@ -136,10 +133,9 @@ def get_similar_drugs(
     arguments = {"drugChemblId": chembl_id}
     if limit is not None:
         arguments["limit"] = limit
-    
+
     result = _run_tooluniverse_function(
-        "OpenTargets_get_similar_entities_by_drug_chemblId",
-        arguments
+        "OpenTargets_get_similar_entities_by_drug_chemblId", arguments
     )
     return result
 
@@ -152,7 +148,7 @@ def get_drug_withdrawal_status(
     """Check if a drug has been withdrawn or has black box warnings."""
     result = _run_tooluniverse_function(
         "OpenTargets_get_drug_withdrawn_blackbox_status_by_chemblId",
-        {"chemblId": chembl_id}
+        {"chemblId": chembl_id},
     )
     return result
 
@@ -165,25 +161,25 @@ def list_available_biomedical_tools() -> str:
     try:
         engine = get_tooluniverse_engine()
         tool_name_list, tool_desc_list = engine.refresh_tool_name_desc()
-        
+
         # Group tools by category
         categories = {
             "Drug Tools": [],
-            "Disease Tools": [], 
+            "Disease Tools": [],
             "Target Tools": [],
-            "Other Tools": []
+            "Other Tools": [],
         }
-        
+
         for name, desc in zip(tool_name_list, tool_desc_list):
-            if 'drug' in name.lower():
+            if "drug" in name.lower():
                 categories["Drug Tools"].append(f"- {name}: {desc[:100]}...")
-            elif 'disease' in name.lower():
+            elif "disease" in name.lower():
                 categories["Disease Tools"].append(f"- {name}: {desc[:100]}...")
-            elif 'target' in name.lower():
+            elif "target" in name.lower():
                 categories["Target Tools"].append(f"- {name}: {desc[:100]}...")
             else:
                 categories["Other Tools"].append(f"- {name}: {desc[:100]}...")
-        
+
         result = f"Total tools: {len(tool_name_list)}\n\n"
         for category, tools in categories.items():
             if tools:
@@ -192,7 +188,7 @@ def list_available_biomedical_tools() -> str:
                 if len(tools) > 5:
                     result += f"\n... and {len(tools) - 5} more\n"
                 result += "\n\n"
-        
+
         return result
     except Exception as e:
         error_msg = f"Failed to list tools. Error: {repr(e)}"

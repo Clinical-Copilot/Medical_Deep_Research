@@ -25,40 +25,42 @@ from langgraph.prebuilt import create_react_agent
 
 # Configure logging with a simpler format
 logging.basicConfig(
-    level=logging.INFO,
-    format="%(message)s"  # Only show the message, no timestamp
+    level=logging.INFO, format="%(message)s"  # Only show the message, no timestamp
 )
 logger = logging.getLogger(__name__)
 
 # Define MCP server configuration matching the structure in nodes.py
 config = {
-        "configurable": {
-            "thread_id": "default",
-            "max_plan_iterations": 3,
-            "max_step_num": 1,
-            "mcp_settings": {
-                "servers": {
-                    # "mcp-github-trending": {
-                    #     "transport": "stdio",
-                    #     "command": "uvx",
-                    #     "args": ["mcp-github-trending"],
-                    #     "enabled_tools": ["get_github_trending_repositories"],
-                    #     "add_to_agents": ["researcher"],
-                    # }
-                }
-            },
+    "configurable": {
+        "thread_id": "default",
+        "max_plan_iterations": 3,
+        "max_step_num": 1,
+        "mcp_settings": {
+            "servers": {
+                # "mcp-github-trending": {
+                #     "transport": "stdio",
+                #     "command": "uvx",
+                #     "args": ["mcp-github-trending"],
+                #     "enabled_tools": ["get_github_trending_repositories"],
+                #     "add_to_agents": ["researcher"],
+                # }
+            }
         },
-        "recursion_limit": 100,
-    }
+    },
+    "recursion_limit": 100,
+}
+
 
 async def test_research():
     """Test the biomedical research assistant functionality."""
     # Initialize MCP client with the same structure as nodes.py
     mcp_servers = {}
     enabled_tools = {}
-    
+
     if config["configurable"]["mcp_settings"]:
-        for server_name, server_config in config["configurable"]["mcp_settings"]["servers"].items():
+        for server_name, server_config in config["configurable"]["mcp_settings"][
+            "servers"
+        ].items():
             if (
                 server_config["enabled_tools"]
                 and "researcher" in server_config["add_to_agents"]
@@ -70,10 +72,10 @@ async def test_research():
                 }
                 for tool_name in server_config["enabled_tools"]:
                     enabled_tools[tool_name] = server_name
-    
+
     # Initialize MCP client
     client = MultiServerMCPClient(mcp_servers)
-    
+
     # Get default tools
     loaded_tools = [crawl_tool]
 
@@ -105,25 +107,21 @@ async def test_research():
         Use the available tools to find and analyze information from various biomedical sources.
         Focus on peer-reviewed articles, clinical trials, and medical research papers.
         Make sure to clearly label which information comes from which source. I also need smart incline citations with smart abbreviations in the text. Need the incline citation to match the references ta the final. Track all sources and include a References section at the end using link reference format. Include an empty line between each citation for better readability. Use this format for each reference:\n- [Source Title](URL)\n\n- [Another Source](URL)""",
-        name="biomedical_research_assistant"
+        name="biomedical_research_assistant",
     )
-    
+
     # Test queries
     test_queries = [
         "What precautions or warnings should be kept in mind when taking aspirin?"
     ]
-    
+
     for query in test_queries:
         logger.info(f"\nQuery: {query}")
-        result = await agent.ainvoke({
-            "messages": [{
-                "role": "user",
-                "content": query
-            }]
-        })
-        
+        result = await agent.ainvoke({"messages": [{"role": "user", "content": query}]})
+
         messages = result.get("messages", [])
         print(messages[-1].content)
 
+
 if __name__ == "__main__":
-    asyncio.run(test_research()) 
+    asyncio.run(test_research())

@@ -24,7 +24,7 @@ __all__ = [
     # "get_web_search_tool",
     # # "get_drug_warnings",
     # "get_drug_warnings_by_drug_name",
-    # "get_drug_mechanisms", 
+    # "get_drug_mechanisms",
     # "get_drugs_for_disease",
     # "get_disease_targets",
     # "get_target_disease_evidence",
@@ -35,4 +35,4 @@ __all__ = [
     "get_drug_warnings_by_drug_name",
     "get_boxed_warning_info_by_drug_name",
     "get_drug_names_by_controlled_substance_DEA_schedule",
-    ]
+]

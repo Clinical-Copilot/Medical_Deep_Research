@@ -18,8 +18,7 @@ from langgraph.prebuilt import create_react_agent
 
 # Configure logging with a simpler format
 logging.basicConfig(
-    level=logging.INFO,
-    format="%(message)s"  # Only show the message, no timestamp
+    level=logging.INFO, format="%(message)s"  # Only show the message, no timestamp
 )
 
 # Set OpenAI client logging to WARNING level to suppress debug messages
@@ -35,21 +34,22 @@ config = {
         "thread_id": "default",
         "max_plan_iterations": 3,
         "max_step_num": 1,
-        "mcp_settings": {
-            "servers": {}
-        }
+        "mcp_settings": {"servers": {}},
     },
     "recursion_limit": 100,
 }
+
 
 async def test_research():
     """Test the intelligent assistant functionality."""
     # Initialize MCP client with the same structure as nodes.py
     mcp_servers = {}
     enabled_tools = {}
-    
+
     if config["configurable"]["mcp_settings"]:
-        for server_name, server_config in config["configurable"]["mcp_settings"]["servers"].items():
+        for server_name, server_config in config["configurable"]["mcp_settings"][
+            "servers"
+        ].items():
             if (
                 server_config["enabled_tools"]
                 and "researcher" in server_config["add_to_agents"]
@@ -61,13 +61,13 @@ async def test_research():
                 }
                 for tool_name in server_config["enabled_tools"]:
                     enabled_tools[tool_name] = server_name
-    
+
     # Initialize MCP client
     client = MultiServerMCPClient(mcp_servers)
-    
+
     # Get default tools
     loaded_tools = [crawl_tool, openai_search]
-    
+
     # Get tools from MCP servers
     try:
         tools = await client.get_tools()
@@ -84,7 +84,7 @@ async def test_research():
 
     # Get LLM for query processing
     model = get_llm_by_type(AGENT_LLM_MAP["researcher"])
-    
+
     # Initialize query processor with LLM
     query_processor = QueryProcessor(loaded_tools, llm=model)
 
@@ -129,68 +129,72 @@ Problem-Solving Process:
 6. If a tool call fails, analyze the error and adjust your approach accordingly
 7. Store intermediate results and use them directly in subsequent tool calls
 8. After gathering all information, synthesize the results into a coherent response""",
-        name="assistant"
+        name="assistant",
     )
-    
+
     # Test queries
     test_queries = [
         "What are the latest developments in quantum computing?",
         "How does climate change affect marine ecosystems?",
-        "What are the key features of the latest iPhone model?"
+        "What are the key features of the latest iPhone model?",
     ]
-    
+
     for query in test_queries:
         logger.info(f"\nQuery: {query}")
-        
+
         # Process each tool with its specific strategy
         for tool in loaded_tools:
             # Expand the query using tool-specific strategy
             expanded_query = query_processor.expand_query(query, tool)
-            
+
             logger.info(f"\nExpanded query for {tool.__class__.__name__}:")
             logger.info(f"Rationale: {expanded_query.rationale}")
             logger.info(f"Tool Requirements: {expanded_query.tool_requirements}")
-            
+
             # Process each sub-query
             for sub_query in expanded_query.query:
-                result = await agent.ainvoke({
-                    "messages": [{
-                        "role": "user",
-                        "content": sub_query
-                    }]
-                })
-                
+                result = await agent.ainvoke(
+                    {"messages": [{"role": "user", "content": sub_query}]}
+                )
+
                 # Process and store the results
                 messages = result.get("messages", [])
                 if not messages:
                     logger.warning("No messages were returned")
                     continue
-                    
+
                 # Process each message
                 for message in messages:
-                    if hasattr(message, 'content'):
+                    if hasattr(message, "content"):
                         # Process tool results if present
-                        if hasattr(message, 'tool_calls'):
+                        if hasattr(message, "tool_calls"):
                             for tool_call in message.tool_calls:
-                                tool_name = tool_call.get('name')
-                                tool_result = tool_call.get('result')
+                                tool_name = tool_call.get("name")
+                                tool_result = tool_call.get("result")
                                 if tool_name and tool_result:
-                                    processed_result = query_processor.process_tool_result(
-                                        tool_name, tool_result, sub_query
+                                    processed_result = (
+                                        query_processor.process_tool_result(
+                                            tool_name, tool_result, sub_query
+                                        )
                                     )
                                     # Get relevant results for this tool
-                                    relevant_results = query_processor.get_relevant_results(
-                                        query, tool_name
+                                    relevant_results = (
+                                        query_processor.get_relevant_results(
+                                            query, tool_name
+                                        )
                                     )
                                     logger.info(f"\nProcessed result from {tool_name}:")
                                     logger.info(processed_result)
                                     if relevant_results:
-                                        logger.info(f"\nRelevant results for {tool_name}:")
+                                        logger.info(
+                                            f"\nRelevant results for {tool_name}:"
+                                        )
                                         logger.info(relevant_results)
                         else:
                             logger.info(f"\n{message.content}")
                     else:
                         logger.info(f"\n{message}")
 
+
 if __name__ == "__main__":
-    asyncio.run(test_research()) 
+    asyncio.run(test_research())
