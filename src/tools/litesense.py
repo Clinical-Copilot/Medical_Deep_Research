@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 @tool
 @log_io
-@process_queries(strategy=QueryStrategy.PARAPHRASE, max_variations=3)
+@process_queries(strategy=QueryStrategy.LITESENSE, max_variations=3)
 def litesense_tool(
     query: Annotated[
         str, "Free-text biomedical query (keywords, phrase, or question)."
@@ -27,7 +27,7 @@ def litesense_tool(
     """
     LitSense 2.0 semantic search
     - Vector-based retrieval over 38 M PubMed abstracts and 6.6 M PMC full-text articles
-    - Returns top ranked sentences or paragraphs (user’s query auto-matched to best level)
+    - Returns top ranked sentences or paragraphs (user's query auto-matched to best level)
     - Each hit includes passage text + metadata (PMID/PMCID, title, journal, year, rank)
     Use to fetch compact, high-precision evidence from the biomedical literature.
     """

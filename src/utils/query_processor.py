@@ -1,33 +1,3 @@
-"""
-Query Processing Module for Enhanced Tool Interactions
-
-This module provides functionality to process and transform queries before they are passed
-to tools. It supports different strategies for query processing, such as direct passing,
-paraphrasing, and query expansion.
-
-Example:
-    ```python
-    # Create a tool description
-    tool_desc = ToolDescription(
-        name="search_tool",
-        query_strategy=QueryStrategy.PARAPHRASE,
-        max_variations=3
-    )
-
-    # Initialize processor
-    processor = QueryProcessor()
-
-    # Process query
-    variations = await processor.process_query(
-        "What are the symptoms of COVID?",
-        tool_desc
-    )
-    ```
-
-The module uses LLMs to generate query variations and ensures proper error handling
-and validation of results.
-"""
-
 from typing import List, Dict, Any, Optional, Union
 from enum import Enum
 from dataclasses import dataclass
@@ -235,31 +205,47 @@ class QueryProcessor:
             return (
                 base_prompt
                 + f"""
-Generate {tool_description.max_variations - 1} alternative ways to express this search query while preserving its exact meaning.
-Each variation should:
-1. Keep the similar intent and meaning
-2. Use different wording or phrasing that people would use to refer to the same thing
-3. Be clear and specific
-4. Be suitable for a search engine
+                    Generate {tool_description.max_variations - 1} alternative ways to express this search query while preserving its exact meaning.
+                    Each variation should:
+                    1. Keep the similar intent and meaning
+                    2. Use different wording or phrasing that people would use to refer to the same thing
+                    3. Be clear and specific
+                    4. Be suitable for a search engine
 
-Format each variation on a new line starting with '- '.
-Do not include any explanations or reasoning, just the variations.
-"""
+                    Format each variation on a new line starting with '- '.
+                    Do not include any explanations or reasoning, just the variations.
+                    """
             )
 
         elif tool_description.query_strategy == QueryStrategy.EXPAND:
             return (
                 base_prompt
                 + f"""
-Generate {tool_description.max_variations - 1} expanded versions of this search query by:
-1. Adding relevant technical terms or synonyms
-2. Including related concepts
-3. Being more specific or detailed
-4. Using domain-specific terminology
+                    Generate {tool_description.max_variations - 1} expanded versions of this search query by:
+                    1. Adding relevant technical terms or synonyms
+                    2. Including related concepts
+                    3. Being more specific or detailed
+                    4. Using domain-specific terminology
 
-Format each expanded query on a new line starting with '- '.
-Do not include any explanations or reasoning, just the expanded queries.
-"""
+                    Format each expanded query on a new line starting with '- '.
+                    Do not include any explanations or reasoning, just the expanded queries.
+                    """
+            )
+
+        elif tool_description.query_strategy == QueryStrategy.LITESENSE:
+            return (
+                base_prompt
+                + f"""
+                    Generate {tool_description.max_variations - 1} alternative ways to express the biomedical search query below while keeping its meaning unchanged.
+
+                    Guidelines  
+                    1. Preserve every biomedical fact, hypothesis, or observation.  
+                    2. Rephrase using wording a biomedical scientist would write in an abstract or full text.  
+                    3. Ensure each version is clear, specific, and context-rich for sentence- or paragraph-level search.  
+
+                    Format each expanded query on a new line starting with '- '.
+                    Do not include any explanations or reasoning, just the expanded queries.
+                    """
             )
 
         return base_prompt
