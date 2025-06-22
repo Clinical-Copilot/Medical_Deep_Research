@@ -44,6 +44,7 @@ def handoff_to_planner(
     # as a way for LLM to signal that it needs to hand off to planner agent
     return
 
+
 def coordinator_node(
     state: State,
 ) -> Command[Literal["planner", "__end__"]]:
@@ -69,6 +70,7 @@ def coordinator_node(
         logger.debug(f"Coordinator response: {response}")
 
     return Command(goto=goto)
+
 
 def planner_node(
     state: State, config: RunnableConfig
@@ -127,6 +129,7 @@ def planner_node(
         },
         goto="human_feedback",
     )
+
 
 ##TODO: consider how to incorporate human feedback into the workflow
 def human_feedback_node(
@@ -246,7 +249,7 @@ async def _execute_agent_step(
     if agent_name == "researcher":
         agent_input["messages"].append(
             HumanMessage(
-                content="IMPORTANT: Use inline citations and a final \"### References\" section.  \nInline citations – place [tag] immediately after each claim; tag = first author's surname (or first significant title word if no author) + last two digits of year, e.g. [smith24]; add \"-a\", \"-b\"... if needed to keep tags unique; reuse the same tag for repeat citations.  \nReferences – append \"### References\" after the text; list every unique tag in the order it first appears, one per line with a blank line between, formatted **[tag]** [Full Source Title](URL). Show URLs only here.  \nNo other citation style.",
+                content='IMPORTANT: Use inline citations and a final "### References" section.  \nInline citations – place [tag] immediately after each claim; tag = first author\'s surname (or first significant title word if no author) + last two digits of year, e.g. [smith24]; add "-a", "-b"... if needed to keep tags unique; reuse the same tag for repeat citations.  \nReferences – append "### References" after the text; list every unique tag in the order it first appears, one per line with a blank line between, formatted **[tag]** [Full Source Title](URL). Show URLs only here.  \nNo other citation style.',
                 name="system",
             )
         )
@@ -259,14 +262,20 @@ async def _execute_agent_step(
     # Invoke the agent
     default_recursion_limit = 10
     try:
-        recursion_limit = int(os.getenv("AGENT_RECURSION_LIMIT", str(default_recursion_limit)))
+        recursion_limit = int(
+            os.getenv("AGENT_RECURSION_LIMIT", str(default_recursion_limit))
+        )
         if recursion_limit <= 0:
-            logger.warning(f"AGENT_RECURSION_LIMIT must be positive, using default: {default_recursion_limit}")
+            logger.warning(
+                f"AGENT_RECURSION_LIMIT must be positive, using default: {default_recursion_limit}"
+            )
             recursion_limit = default_recursion_limit
         else:
             logger.info(f"Recursion limit set to: {recursion_limit}")
     except ValueError:
-        logger.warning(f"Invalid AGENT_RECURSION_LIMIT value, using default: {default_recursion_limit}")
+        logger.warning(
+            f"Invalid AGENT_RECURSION_LIMIT value, using default: {default_recursion_limit}"
+        )
         recursion_limit = default_recursion_limit
 
     result = await agent.ainvoke(
@@ -293,6 +302,7 @@ async def _execute_agent_step(
         },
         goto="research_team",
     )
+
 
 async def _setup_and_execute_agent_step(
     state: State,
@@ -356,11 +366,14 @@ async def researcher_node(
     """Researcher node that do research"""
     logger.info("Researcher node is researching.")
     configurable = Configuration.from_runnable_config(config)
+    # Default tools for researcher including ToolUniverse biomedical tools
+    researcher_tools = []
+
     return await _setup_and_execute_agent_step(
         state,
         config,
         "researcher",
-        [openai_search_tool, crawl_tool],
+        [crawl_tool],
     )
 
 
@@ -376,15 +389,18 @@ async def coder_node(
         [python_repl_tool],
     )
 
+
 def reporter_node(state: State, config: RunnableConfig = None):
     """Reporter node that write a final report."""
     logger.info("Reporter write final report")
     current_plan = state.get("current_plan")
-    
+
     # Get configuration
-    configurable = Configuration.from_runnable_config(config) if config else Configuration()
+    configurable = (
+        Configuration.from_runnable_config(config) if config else Configuration()
+    )
     output_format = configurable.output_format
-    
+
     input_ = {
         "messages": [
             HumanMessage(
@@ -392,13 +408,13 @@ def reporter_node(state: State, config: RunnableConfig = None):
             )
         ],
     }
-    
+
     # Use different prompt template based on output format
     if output_format == "short-report":
         invoke_messages = apply_prompt_template("short_reporter", input_)
     else:  # long-report (default)
         invoke_messages = apply_prompt_template("long_reporter", input_)
-    
+
     observations = state.get("observations", [])
 
     # Add format-specific reminder
@@ -422,22 +438,23 @@ def reporter_node(state: State, config: RunnableConfig = None):
             )
         )
 
-    
     response = get_llm_by_type(AGENT_LLM_MAP["reporter"]).invoke(invoke_messages)
     response_content = response.content
     logger.info(f"reporter response: {response_content}")
-    
+
     return {"final_report": response_content}
+
 
 def node(func: Callable) -> Callable:
     """Decorator to create a node.
-    
+
     Args:
         func: The function to wrap as a node
-        
+
     Returns:
         Wrapped function
     """
+
     @wraps(func)
     async def async_wrapper(*args, **kwargs):
         try:

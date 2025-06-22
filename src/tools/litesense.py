@@ -10,25 +10,25 @@ from src.utils.query_processor import QueryStrategy
 
 logger = logging.getLogger(__name__)
 
-## TODO: 
+## TODO:
 #  1. Try to improve the description of the tool (the current version might not be accurate)
 #  2. wrapper
 #  3. Try use the entire paper?
 
+
 @tool
 @log_io
-@process_queries(
-    strategy=QueryStrategy.PARAPHRASE,
-    max_variations=3
-)
+@process_queries(strategy=QueryStrategy.PARAPHRASE, max_variations=3)
 def litesense_tool(
-    query: Annotated[str, "Free-text biomedical query (keywords, phrase, or question)."],
+    query: Annotated[
+        str, "Free-text biomedical query (keywords, phrase, or question)."
+    ],
 ) -> str:
     """
     LitSense 2.0 semantic search
-    - Vector-based retrieval over 38 M PubMed abstracts and 6.6 M PMC full-text articles  
-    - Returns top ranked sentences or paragraphs (user’s query auto-matched to best level)  
-    - Each hit includes passage text + metadata (PMID/PMCID, title, journal, year, rank)  
+    - Vector-based retrieval over 38 M PubMed abstracts and 6.6 M PMC full-text articles
+    - Returns top ranked sentences or paragraphs (user’s query auto-matched to best level)
+    - Each hit includes passage text + metadata (PMID/PMCID, title, journal, year, rank)
     Use to fetch compact, high-precision evidence from the biomedical literature.
     """
     try:
@@ -41,10 +41,12 @@ def litesense_tool(
         if not data:
             return "No relevant passages found."
 
-        top_results = "\n\n".join([
-            f"{i+1}. {p['text'].strip()}\n[PMCID: {p.get('pmcid')}, Section: {p.get('section')}, Score: {p.get('score'):.3f}]"
-            for i, p in enumerate(data[:5])
-        ])
+        top_results = "\n\n".join(
+            [
+                f"{i+1}. {p['text'].strip()}\n[PMCID: {p.get('pmcid')}, Section: {p.get('section')}, Score: {p.get('score'):.3f}]"
+                for i, p in enumerate(data[:5])
+            ]
+        )
 
         return top_results
 

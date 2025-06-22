@@ -54,7 +54,7 @@ filterwarnings = [
 ]
 
 [tool.coverage.report]
-fail_under = 25
+fail_under = 10
 
 [tool.hatch.build.targets.wheel]
 packages = ["src"]

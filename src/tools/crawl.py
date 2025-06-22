@@ -26,6 +26,7 @@ def crawl_tool(
         error_msg = f"Failed to crawl. Error: {repr(e)}"
         logger.error(error_msg)
         return error_msg
-    
+
+
 # if __name__ == "__main__":
 #     print(crawl_tool.invoke("url"))

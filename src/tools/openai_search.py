@@ -54,6 +54,7 @@ def _clean_urls(urls: List[str]) -> List[str]:
 
     return cleaned
 
+
 def _extract_urls_from_text(text: str) -> List[str]:
     """Return every http(s) URL in free-form text."""
     return re.findall(r"https?://[^\s)>\]\}]+", text)
@@ -67,7 +68,7 @@ def _extract_urls_from_metadata(msg: Any) -> List[str]:
     """
     urls: List[str] = []
 
-    meta = getattr(msg, "metadata", None) or {}    
+    meta = getattr(msg, "metadata", None) or {}
     for c in meta.get("citations", []):
         if isinstance(c, dict) and c.get("url"):
             urls.append(c["url"])
@@ -80,12 +81,10 @@ def _extract_urls_from_metadata(msg: Any) -> List[str]:
 
     return urls
 
+
 @tool
 @log_io
-@process_queries(
-    strategy=QueryStrategy.PARAPHRASE,
-    max_variations=3
-)
+@process_queries(strategy=QueryStrategy.PARAPHRASE, max_variations=3)
 async def openai_search_tool(
     query: Annotated[str, "The search query to send to OpenAI."],
 ) -> Dict[str, Any]:
@@ -111,11 +110,7 @@ async def openai_search_tool(
         urls = _extract_urls_from_metadata(msg) or _extract_urls_from_text(answer)
         urls = _clean_urls(urls)
 
-        return {
-            "query": query,
-            "answer": answer,
-            "urls": urls
-        }
+        return {"query": query, "answer": answer, "urls": urls}
 
     except Exception as exc:
         error = f"OpenAI search failed: {exc!r}"

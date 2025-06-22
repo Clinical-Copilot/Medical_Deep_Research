@@ -19,7 +19,7 @@ def ask(
     debug=False,
     max_plan_iterations=1,
     max_step_num=3,
-    output_format="long-report"
+    output_format="long-report",
 ):
     """Run the agent workflow with the given question.
 
@@ -36,16 +36,13 @@ def ask(
             debug=debug,
             max_plan_iterations=max_plan_iterations,
             max_step_num=max_step_num,
-            output_format=output_format
+            output_format=output_format,
         )
     )
 
 
 def main(
-    debug=False,
-    max_plan_iterations=1,
-    max_step_num=3,
-    output_format="long-report"
+    debug=False, max_plan_iterations=1, max_step_num=3, output_format="long-report"
 ):
     """Interactive mode with built-in questions.
 
@@ -76,7 +73,7 @@ def main(
         debug=debug,
         max_plan_iterations=max_plan_iterations,
         max_step_num=max_step_num,
-        output_format=output_format
+        output_format=output_format,
     )
 
 
@@ -100,11 +97,7 @@ if __name__ == "__main__":
         default=3,
         help="Maximum number of steps in a plan (default: 3)",
     )
-    parser.add_argument(
-        "--debug", 
-        action="store_true", 
-        help="Enable debug logging"
-    )
+    parser.add_argument("--debug", action="store_true", help="Enable debug logging")
     parser.add_argument(
         "--output_format",
         type=str,
@@ -120,7 +113,7 @@ if __name__ == "__main__":
             debug=args.debug,
             max_plan_iterations=args.max_plan_iterations,
             max_step_num=args.max_step_num,
-            output_format=args.output_format
+            output_format=args.output_format,
         )
     else:
         # Parse user input from command line arguments or user input
@@ -135,5 +128,5 @@ if __name__ == "__main__":
             debug=args.debug,
             max_plan_iterations=args.max_plan_iterations,
             max_step_num=args.max_step_num,
-            output_format=args.output_format
+            output_format=args.output_format,
         )

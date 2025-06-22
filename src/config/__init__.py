@@ -44,5 +44,5 @@ __all__ = [
     "TEAM_MEMBER_CONFIGRATIONS",
     "SELECTED_SEARCH_ENGINE",
     "SearchEngine",
-    "BUILT_IN_QUESTIONS"
+    "BUILT_IN_QUESTIONS",
 ]
