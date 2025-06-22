@@ -5,7 +5,7 @@
 
 import os
 import logging
-from scholarly import scholarly
+# from scholarly import scholarly
 from typing import Annotated, Dict, Any
 from googleapiclient.discovery import build
 from dotenv import load_dotenv
@@ -27,7 +27,7 @@ def get_search_service():
 
 @tool
 @log_io
-def google_search(
+def get_web_search_tool(
     query: Annotated[str, "The search query to look up."],
     num_results: Annotated[int, "Number of results to return (max 10)."] = 1,
 ) -> Dict[str, Any]:
@@ -65,55 +65,55 @@ def google_search(
         return {"query": query, "error": error_msg}
 
 
-@tool
-def get_web_search_tool(query: str, num_results: int = 10) -> str:
-    """Perform a Google Scholar search using the scholarly package."""
-    try:
-        logger.info(f"Searching Google Scholar for: {query}")
-        search_query = scholarly.search_pubs(
-            query
-        )  # search_pubs is for publications ... decent but probably not the best choice
-        results = []
+# @tool
+# def get_scholar_search_tool(query: str, num_results: int = 10) -> str:
+#     """Perform a Google Scholar search using the scholarly package."""
+#     try:
+#         logger.info(f"Searching Google Scholar for: {query}")
+#         search_query = scholarly.search_pubs(
+#             query
+#         )  # search_pubs is for publications ... decent but probably not the best choice
+#         results = []
 
-        for i, pub in enumerate(search_query):
-            if i >= num_results:
-                break
-            bib = pub.get("bib", {})
-            title = bib.get("title", "No title")
-            authors = ", ".join(bib.get("author", []))
-            year = bib.get("pub_year", "Unknown year")
-            venue = bib.get("venue", "Unknown venue")
-            abstract = bib.get("abstract", "No abstract available")
+#         for i, pub in enumerate(search_query):
+#             if i >= num_results:
+#                 break
+#             bib = pub.get("bib", {})
+#             title = bib.get("title", "No title")
+#             authors = ", ".join(bib.get("author", []))
+#             year = bib.get("pub_year", "Unknown year")
+#             venue = bib.get("venue", "Unknown venue")
+#             abstract = bib.get("abstract", "No abstract available")
 
-            # These are in the main pub object
-            citations = pub.get("num_citations", 0)
-            url = pub.get("pub_url", "No URL available")
+#             # These are in the main pub object
+#             citations = pub.get("num_citations", 0)
+#             url = pub.get("pub_url", "No URL available")
 
-            results.append(
-                f"""
-{i+1}. {title}
-   Authors: {authors}
-   Year: {year}
-   Published in: {venue}
-   Citations: {citations} times
-   URL: {url}
-   Abstract: {abstract[:200]}{'...' if len(abstract) > 200 else ''}
-"""
-            )
+#             results.append(
+#                 f"""
+# {i+1}. {title}
+#    Authors: {authors}
+#    Year: {year}
+#    Published in: {venue}
+#    Citations: {citations} times
+#    URL: {url}
+#    Abstract: {abstract[:200]}{'...' if len(abstract) > 200 else ''}
+# """
+#             )
 
-        if not results:
-            return f"No Google Scholar results found for '{query}'."
-        return f"Google Scholar Results for '{query}':\n" + "\n".join(results)
+#         if not results:
+#             return f"No Google Scholar results found for '{query}'."
+#         return f"Google Scholar Results for '{query}':\n" + "\n".join(results)
 
-    except ImportError:
-        error_msg = "Google Scholar search requires the 'scholarly' package. Please install it with 'pip install scholarly'."
-        logger.error(error_msg)
-        return error_msg
+#     except ImportError:
+#         error_msg = "Google Scholar search requires the 'scholarly' package. Please install it with 'pip install scholarly'."
+#         logger.error(error_msg)
+#         return error_msg
 
-    except Exception as e:
-        error_msg = f"Failed to search. Error: {e}"
-        logger.error(error_msg)
-        return error_msg
+#     except Exception as e:
+#         error_msg = f"Failed to search. Error: {e}"
+#         logger.error(error_msg)
+#         return error_msg
 
 
 # if __name__ == "__main__":
