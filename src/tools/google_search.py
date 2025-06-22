@@ -66,7 +66,7 @@ def google_search(
 
 
 @tool
-def google_scholar_search(query: str, num_results: int = 10) -> str:
+def get_web_search_tool(query: str, num_results: int = 10) -> str:
     """Perform a Google Scholar search using the scholarly package."""
     try:
         logger.info(f"Searching Google Scholar for: {query}")
