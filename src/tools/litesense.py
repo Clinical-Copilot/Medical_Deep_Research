@@ -1,5 +1,5 @@
 import logging
-import requests
+import aiohttp
 from typing import Annotated
 
 from langchain_core.tools import tool
@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 @tool
 @log_io
 @process_queries(strategy=QueryStrategy.LITESENSE, max_variations=3)
-def litesense_tool(
+async def litesense_tool(
     query: Annotated[
         str, "Free-text biomedical query (keywords, phrase, or question)."
     ],
@@ -34,9 +34,11 @@ def litesense_tool(
     try:
         url = "https://www.ncbi.nlm.nih.gov/research/litsense2-api/api/passages/"
         params = {"query": query, "rerank": "true"}
-        response = requests.get(url, params=params)
-        response.raise_for_status()
-        data = response.json()
+        
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url, params=params) as response:
+                response.raise_for_status()
+                data = await response.json()
 
         if not data:
             return "No relevant passages found."

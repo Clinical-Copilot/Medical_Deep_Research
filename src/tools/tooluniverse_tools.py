@@ -2,6 +2,8 @@
 # # SPDX-License-Identifier: MIT
 
 import logging
+import sys
+import os
 from typing import Annotated, Optional
 
 from langchain_core.tools import tool
@@ -12,6 +14,23 @@ logger = logging.getLogger(__name__)
 # Global ToolUniverse engine instance
 _engine = None
 
+# Suppress output during ToolUniverse initialization
+class SuppressOutput:
+    def __enter__(self):
+        self._original_stdout = sys.stdout
+        self._original_stderr = sys.stderr
+        # Redirect both stdout and stderr to /dev/null
+        self._null_fd = open(os.devnull, 'w')
+        sys.stdout = self._null_fd
+        sys.stderr = self._null_fd
+        return self
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        # Restore original stdout and stderr
+        sys.stdout = self._original_stdout
+        sys.stderr = self._original_stderr
+        self._null_fd.close()
+
 
 def get_tooluniverse_engine():
     """Get or create a ToolUniverse engine instance."""
@@ -20,8 +39,9 @@ def get_tooluniverse_engine():
         try:
             from tooluniverse.execute_function import ToolUniverse
 
-            _engine = ToolUniverse()
-            _engine.load_tools()
+            with SuppressOutput():
+                _engine = ToolUniverse()
+                _engine.load_tools()
             logger.info(f"ToolUniverse initialized with {len(_engine.all_tools)} tools")
         except Exception as e:
             logger.error(f"Failed to initialize ToolUniverse: {e}")

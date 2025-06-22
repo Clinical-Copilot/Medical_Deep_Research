@@ -18,8 +18,11 @@ from src.agents import create_agent
 from src.tools import (
     crawl_tool,
     openai_search_tool,
-    python_repl_tool,
+    litesense_tool,
+    python_repl_tool
+    # get_boxed_warning_info_by_drug_name
 )
+
 
 from src.config.agents import AGENT_LLM_MAP
 from src.config.configuration import Configuration
@@ -359,7 +362,9 @@ async def researcher_node(
         state,
         config,
         "researcher",
-        [openai_search_tool, crawl_tool],
+        [openai_search_tool, litesense_tool, crawl_tool]
+        # [get_boxed_warning_info_by_drug_name]
+        # [openai_search_tool, crawl_tool],
     )
 
 

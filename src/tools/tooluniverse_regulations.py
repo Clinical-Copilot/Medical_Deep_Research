@@ -1,7 +1,6 @@
-# The project is built upon Bytedance MedDR
-# SPDX-License-Identifier: MIT
-
 import logging
+import sys
+import os
 from typing import Annotated, Optional
 
 from langchain_core.tools import tool
@@ -13,9 +12,27 @@ from .output_parser import dict2md
 
 logger = logging.getLogger(__name__)
 
-engine = ToolUniverse()
-engine.load_tools()
+# Suppress output during ToolUniverse initialization
+class SuppressOutput:
+    def __enter__(self):
+        self._original_stdout = sys.stdout
+        self._original_stderr = sys.stderr
+        # Redirect both stdout and stderr to /dev/null
+        self._null_fd = open(os.devnull, 'w')
+        sys.stdout = self._null_fd
+        sys.stderr = self._null_fd
+        return self
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        # Restore original stdout and stderr
+        sys.stdout = self._original_stdout
+        sys.stderr = self._original_stderr
+        self._null_fd.close()
 
+# Initialize ToolUniverse with suppressed output
+with SuppressOutput():
+    engine = ToolUniverse()
+    engine.load_tools()
 
 def _run_tooluniverse_function(function_name: str, arguments: dict) -> str:
     """Helper function to run ToolUniverse functions with error handling."""
