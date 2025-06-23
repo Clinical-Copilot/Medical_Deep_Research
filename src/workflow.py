@@ -1,4 +1,5 @@
 import asyncio
+import json
 import logging
 import os
 from pathlib import Path
@@ -39,6 +40,22 @@ logger = logging.getLogger(__name__)
 
 # Create the graph
 graph = build_graph()
+
+
+def load_mcp_config():
+    """Load MCP configuration from JSON file."""
+    try:
+        config_path = Path("mcp_config.json")
+        if config_path.exists():
+            with open(config_path, "r") as f:
+                config = json.load(f)
+                return config.get("mcp_servers", {})
+        else:
+            logger.warning("mcp_config.json not found, using default MCP settings")
+            return {}
+    except Exception as e:
+        logger.error(f"Error loading MCP config: {e}")
+        return {}
 
 
 def serialize_message(message):
@@ -109,6 +126,10 @@ async def run_agent_workflow_async(
         "current_plan": None,  # Initialize plan
         "observations": [],  # Track observations
     }
+    
+    # Load MCP configuration from JSON file
+    mcp_servers = load_mcp_config()
+    
     config = {
         "configurable": {
             "thread_id": "default",
@@ -116,18 +137,10 @@ async def run_agent_workflow_async(
             "max_step_num": max_step_num,
             "output_format": output_format,
             "mcp_settings": {
-                "servers": {
-                    "mcp-github-trending": {
-                        "transport": "stdio",
-                        "command": "uvx",
-                        "args": ["mcp-github-trending"],
-                        "enabled_tools": ["get_github_trending_repositories"],
-                        "add_to_agents": ["researcher"],
-                    }
-                }
+                "servers": mcp_servers
             },
         },
-        "recursion_limit": 20,  # Increased to 20 for more flexibility
+        "recursion_limit": 10,  # Increased to 20 for more flexibility
     }
     last_message_cnt = 0
     try:

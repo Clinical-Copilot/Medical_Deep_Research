@@ -337,7 +337,6 @@ async def _setup_and_execute_agent_step(
                 for tool_name in server_config["enabled_tools"]:
                     enabled_tools[tool_name] = server_name
 
-    # Create and execute agent with MCP tools if available
     if mcp_servers:
         client = MultiServerMCPClient(mcp_servers)
         loaded_tools = default_tools[:]
@@ -348,7 +347,8 @@ async def _setup_and_execute_agent_step(
                     f"Powered by '{enabled_tools[tool.name]}'.\n{tool.description}"
                 )
                 loaded_tools.append(tool)
-        agent = create_agent(agent_type, agent_type, default_tools, agent_type)
+    
+        agent = create_agent(agent_type, agent_type, loaded_tools, agent_type)
         return await _execute_agent_step(state, agent, agent_type)
 
 
@@ -358,15 +358,16 @@ async def researcher_node(
     """Researcher node that do research"""
     logger.info("Researcher node is researching.")
     configurable = Configuration.from_runnable_config(config)
+    research_tools = []
+    # research_tools = [openai_search_tool, litesense_tool, crawl_tool]
+    # [get_boxed_warning_info_by_drug_name]
     return await _setup_and_execute_agent_step(
         state,
         config,
         "researcher",
-        [openai_search_tool, litesense_tool, crawl_tool]
-        # [get_boxed_warning_info_by_drug_name]
-        # [openai_search_tool, crawl_tool],
+        research_tools
+        
     )
-
 
 async def coder_node(
     state: State, config: RunnableConfig
