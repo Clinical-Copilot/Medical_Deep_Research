@@ -1,10 +1,13 @@
 {
   "mcp_servers": {
-    "mcp-github-trending": {
+    "biomcp": {
       "transport": "stdio",
-      "command": "uvx",
-      "args": ["mcp-github-trending"],
-      "enabled_tools": ["get_github_trending_repositories"],
+      "command": "uv",
+      "args": ["run", "--with", "biomcp-python", "biomcp", "run"],
+      "enabled_tools": [
+        "search",
+        "fetch"
+      ],
       "add_to_agents": ["researcher"]
     }
   }

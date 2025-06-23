@@ -49,7 +49,11 @@ def load_mcp_config():
         if config_path.exists():
             with open(config_path, "r") as f:
                 config = json.load(f)
-                return config.get("mcp_servers", {})
+                mcp_servers = config.get("mcp_servers", {})
+                logger.info(f"Loaded MCP servers: {list(mcp_servers.keys())}")
+                for server_name, server_config in mcp_servers.items():
+                    logger.info(f"Server '{server_name}' config: {server_config}")
+                return mcp_servers
         else:
             logger.warning("mcp_config.json not found, using default MCP settings")
             return {}
@@ -140,7 +144,7 @@ async def run_agent_workflow_async(
                 "servers": mcp_servers
             },
         },
-        "recursion_limit": 10,  # Increased to 20 for more flexibility
+        "recursion_limit": 20,
     }
     last_message_cnt = 0
     try:

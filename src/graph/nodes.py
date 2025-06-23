@@ -259,7 +259,7 @@ async def _execute_agent_step(
             logger.info("---")
 
     # Invoke the agent
-    default_recursion_limit = 10
+    default_recursion_limit = 20
     try:
         recursion_limit = int(os.getenv("AGENT_RECURSION_LIMIT", str(default_recursion_limit)))
         if recursion_limit <= 0:
@@ -336,7 +336,7 @@ async def _setup_and_execute_agent_step(
                 }
                 for tool_name in server_config["enabled_tools"]:
                     enabled_tools[tool_name] = server_name
-
+ 
     if mcp_servers:
         client = MultiServerMCPClient(mcp_servers)
         loaded_tools = default_tools[:]
@@ -347,7 +347,6 @@ async def _setup_and_execute_agent_step(
                     f"Powered by '{enabled_tools[tool.name]}'.\n{tool.description}"
                 )
                 loaded_tools.append(tool)
-    
         agent = create_agent(agent_type, agent_type, loaded_tools, agent_type)
         return await _execute_agent_step(state, agent, agent_type)
 
