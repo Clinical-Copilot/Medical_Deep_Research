@@ -9,27 +9,18 @@ MCP (Model Context Protocol) servers into the MedDR system.
 """
 
 from .mcp_discovery_agent import MCPDiscoveryAgent, discover_mcp_server_tool
-from .mcp_script_generator import MCPScriptGenerator, generate_mcp_scripts_tool
-from .mcp_validator import MCPValidator, validate_tool_alignment_tool
-from .mcp_integrator import MCPIntegrator, integrate_mcp_server_tool, list_integrated_mcp_servers_tool, remove_mcp_server_tool
-from .mcp_orchestrator import MCPOrchestrator, orchestrate_mcp_integration_tool, list_all_mcp_servers_tool, remove_mcp_server_orchestrator_tool
+from .mcp_config_generator import generate_mcp_config_from_markdown
+from .mcp_validator import MCPValidator, validate_tools_alignment
 
 __all__ = [
     # Classes
     "MCPDiscoveryAgent",
-    "MCPScriptGenerator", 
     "MCPValidator",
-    "MCPIntegrator",
-    "MCPOrchestrator",
+    
+    # Functions
+    "generate_mcp_config_from_markdown",
     
     # Tools
     "discover_mcp_server_tool",
-    "generate_mcp_scripts_tool",
-    "validate_tool_alignment_tool",
-    "integrate_mcp_server_tool",
-    "list_integrated_mcp_servers_tool",
-    "remove_mcp_server_tool",
-    "orchestrate_mcp_integration_tool",
-    "list_all_mcp_servers_tool",
-    "remove_mcp_server_orchestrator_tool"
+    "validate_tools_alignment"
 ] 
