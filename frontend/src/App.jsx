@@ -18,11 +18,13 @@ function App() {
 
   const cleanMarkdown = (text) => {
     return text
-      .replace(/^#{1,6}\s*/gm, '')     // Remove heading symbols
-      .replace(/^\s*[-*]\s*/gm, '')    // Remove list bullets
-      .replace(/\*\*(.*?)\*\*/g, '$1') // Remove bold
-      .replace(/__(.*?)__/g, '$1')     // Remove underline
-      .replace(/\n{3,}/g, '\n\n');     // Collapse extra newlines
+      .replace(/^#{1,6}\s*/gm, '')
+      .replace(/^\s*[-*]\s*/gm, '')
+      .replace(/\*\*(.*?)\*\*/g, '$1')
+      .replace(/\*(.*?)\*/g, '$1')
+      .replace(/^\*\[(.*?)\]\*\*/gm, '[$1]')
+      .replace(/(\[[^\]]+\])\*/g, '$1')
+      .replace(/\n{3,}/g, '\n\n');
   };
 
   const handleSubmit = async (e) => {
@@ -56,19 +58,24 @@ function App() {
       if (data.status === 'success') {
         if (data.data?.workflow_steps?.length > 0) {
           data.data.workflow_steps.forEach(step => {
-            if (step.type === 'plan') {
+            if (
+              step.type === 'plan' &&
+              step.content?.trim() &&
+              step.content.trim() !== 'Research Plan:' &&
+              step.content.trim() !== 'Plan:'
+            ) {
               setMessages(prev => [...prev, {
                 type: 'plan',
                 content: step.content,
                 name: step.name || 'planner'
               }]);
-            } else if (step.type === 'report') {
+            } else if (step.type === 'report' && step.content?.trim()) {
               setMessages(prev => [...prev, {
                 type: 'report',
                 content: step.content,
                 name: step.name || 'reporter'
               }]);
-            } else {
+            } else if (step.content?.trim()) {
               setMessages(prev => [...prev, {
                 type: 'assistant',
                 content: step.content,
@@ -80,7 +87,7 @@ function App() {
 
         if (data.data?.plan?.steps?.length > 0) {
           data.data.plan.steps.forEach(step => {
-            if (step.execution_res) {
+            if (step.execution_res?.trim()) {
               setMessages(prev => [...prev, {
                 type: 'report',
                 content: step.execution_res,
@@ -90,7 +97,7 @@ function App() {
           });
         }
 
-        if (data.data?.coordinator_response) {
+        if (data.data?.coordinator_response?.trim()) {
           setMessages(prev => [...prev, {
             type: 'assistant',
             content: data.data.coordinator_response,
@@ -151,6 +158,13 @@ function App() {
       }
     };
 
+    const isMarkdownContent = (
+      message.type === 'plan' ||
+      message.type === 'report' ||
+      message.name === 'coordinator' ||
+      message.name === 'assistant'
+    );
+
     return (
       <div className={`message-bubble ${message.type}`}>
         <div className="message-header">
@@ -158,7 +172,7 @@ function App() {
           <span className="message-title">{getMessageTitle(message.type, message.name)}</span>
         </div>
         <div className="message-content">
-          {(message.type === 'plan' || message.type === 'report') ? (
+          {isMarkdownContent ? (
             <pre className="formatted-content">{cleanMarkdown(message.content)}</pre>
           ) : (
             <div className="regular-content">{message.content}</div>
