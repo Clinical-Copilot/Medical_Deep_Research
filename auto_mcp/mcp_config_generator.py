@@ -7,13 +7,15 @@ from src.llms.llm import get_llm_by_type
 from src.tools.crawl import crawl_tool
 
 
-def generate_mcp_config_from_markdown(markdown_content: str, llm_type: str = "basic") -> dict:
+def generate_mcp_config_from_markdown(markdown_content: str, llm_type: str = "basic", feedback: str = None) -> dict:
     """
     Generate MCP configuration from markdown content using LLM analysis.
+    Optionally, use feedback to refine the configuration.
     
     Args:
         markdown_content: String containing markdown content (README, documentation, etc.)
         llm_type: Type of LLM to use for analysis
+        feedback: Optional feedback string to guide iterative refinement
         
     Returns:
         Dictionary with MCP configuration
@@ -27,7 +29,10 @@ Analyze the following markdown content and extract MCP server information to gen
 
 Content to analyze:
 {markdown_content}
-
+"""
+    if feedback:
+        prompt += f"\n# Feedback for refinement:\n{feedback}\n"
+    prompt += """
 Based on the content, generate a JSON configuration that follows this exact structure:
 
 {{

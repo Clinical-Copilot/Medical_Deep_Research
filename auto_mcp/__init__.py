@@ -8,9 +8,10 @@ This module provides an automated system for discovering, analyzing, and integra
 MCP (Model Context Protocol) servers into the MedDR system.
 """
 
-from .mcp_discovery_agent import MCPDiscoveryAgent, discover_mcp_server_tool
+from .mcp_discovery_agent import MCPDiscoveryAgent
 from .mcp_config_generator import generate_mcp_config_from_markdown
 from .mcp_validator import MCPValidator, validate_tools_alignment
+from .mcp_orchestrator import AutoMCPOrchestrator
 
 __all__ = [
     # Classes
@@ -21,6 +22,6 @@ __all__ = [
     "generate_mcp_config_from_markdown",
     
     # Tools
-    "discover_mcp_server_tool",
-    "validate_tools_alignment"
+    "validate_tools_alignment",
+    "AutoMCPOrchestrator"
 ] 
