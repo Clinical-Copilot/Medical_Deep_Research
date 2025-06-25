@@ -16,6 +16,15 @@ function App() {
     scrollToBottom();
   }, [messages, currentStep]);
 
+  const cleanMarkdown = (text) => {
+    return text
+      .replace(/^#{1,6}\s*/gm, '')     // Remove heading symbols
+      .replace(/^\s*[-*]\s*/gm, '')    // Remove list bullets
+      .replace(/\*\*(.*?)\*\*/g, '$1') // Remove bold
+      .replace(/__(.*?)__/g, '$1')     // Remove underline
+      .replace(/\n{3,}/g, '\n\n');     // Collapse extra newlines
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!input.trim()) return;
@@ -29,9 +38,7 @@ function App() {
     try {
       const response = await fetch('http://localhost:8000/api/chat', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           query: userMessage,
           max_plan_iterations: 1,
@@ -45,11 +52,9 @@ function App() {
 
       const data = await response.json();
       console.log('Response data:', JSON.stringify(data, null, 2));
-      
+
       if (data.status === 'success') {
-        // Handle workflow steps if they exist
-        if (data.data && data.data.workflow_steps && data.data.workflow_steps.length > 0) {
-          // Process each workflow step
+        if (data.data?.workflow_steps?.length > 0) {
           data.data.workflow_steps.forEach(step => {
             if (step.type === 'plan') {
               setMessages(prev => [...prev, {
@@ -72,21 +77,31 @@ function App() {
             }
           });
         }
-        
-        // Handle coordinator response (for simple queries like greetings)
-        if (data.data && data.data.coordinator_response) {
+
+        if (data.data?.plan?.steps?.length > 0) {
+          data.data.plan.steps.forEach(step => {
+            if (step.execution_res) {
+              setMessages(prev => [...prev, {
+                type: 'report',
+                content: step.execution_res,
+                name: step.title || 'step'
+              }]);
+            }
+          });
+        }
+
+        if (data.data?.coordinator_response) {
           setMessages(prev => [...prev, {
             type: 'assistant',
             content: data.data.coordinator_response,
             name: 'coordinator'
           }]);
         }
-        
-        // If no workflow steps and no coordinator response, show a default message
-        if (!data.data || (!data.data.workflow_steps && !data.data.coordinator_response)) {
+
+        if (!data.data?.workflow_steps && !data.data?.coordinator_response) {
           setMessages(prev => [...prev, {
             type: 'assistant',
-            content: 'I am Biomedical Deep Research, here to assist you with biomedical and healthcare-related inquiries. How can I help you today?',
+            content: 'I am Biomedical Deep Research. How can I help you today?',
             name: 'system'
           }]);
         }
@@ -111,8 +126,6 @@ function App() {
       if (type === 'report') return '📝';
       if (type === 'error') return '❌';
       if (type === 'user') return '👤';
-      
-      // For assistant messages, show icon based on name
       switch (name) {
         case 'coordinator': return '👨‍💼';
         case 'planner': return '📋';
@@ -125,11 +138,9 @@ function App() {
 
     const getMessageTitle = (type, name) => {
       if (type === 'plan') return 'Research Plan';
-      if (type === 'report') return 'Research Report';
+      if (type === 'report') return 'Research Result';
       if (type === 'user') return 'You';
       if (type === 'error') return 'Error';
-      
-      // For assistant messages
       switch (name) {
         case 'coordinator': return 'Coordinator';
         case 'planner': return 'Planner';
@@ -147,8 +158,8 @@ function App() {
           <span className="message-title">{getMessageTitle(message.type, message.name)}</span>
         </div>
         <div className="message-content">
-          {message.type === 'plan' || message.type === 'report' ? (
-            <pre className="formatted-content">{message.content}</pre>
+          {(message.type === 'plan' || message.type === 'report') ? (
+            <pre className="formatted-content">{cleanMarkdown(message.content)}</pre>
           ) : (
             <div className="regular-content">{message.content}</div>
           )}
