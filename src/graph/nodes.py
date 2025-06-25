@@ -112,9 +112,12 @@ def planner_node(
             return Command(goto="reporter")
         else:
             return Command(goto="__end__")
-    if curr_plan.get("has_enough_context"):
+    
+    # Always create Plan object for consistency
+    new_plan = Plan.model_validate(curr_plan)
+    
+    if new_plan.has_enough_context:
         logger.info("Planner response has enough context.")
-        new_plan = Plan.model_validate(curr_plan)
         return Command(
             update={
                 "messages": [AIMessage(content=full_response, name="planner")],
@@ -125,21 +128,136 @@ def planner_node(
     return Command(
         update={
             "messages": [AIMessage(content=full_response, name="planner")],
-            "current_plan": full_response,
+            "current_plan": new_plan,
         },
         goto="feedback_node",
     )
 
+def plan_modifier_node(
+    state: State, config: RunnableConfig
+) -> Command[Literal["feedback_node", "reporter"]]:
+    """Plan modifier node that modifies existing plan based on feedback."""
+    logger.info("Plan modifier updating plan based on feedback")
+    
+    current_plan = state.get("current_plan", "")
+    messages = state.get("messages", [])
+    
+    # Find the feedback message
+    feedback_content = ""
+    for msg in messages:
+        if hasattr(msg, 'name') and msg.name == "feedback":
+            feedback_content = msg.content
+            break
+    
+    if not feedback_content:
+        logger.warning("No feedback found, returning to feedback node")
+        return Command(goto="feedback_node")
+    
+    # Extract feedback (remove [EDIT_PLAN] prefix)
+    if feedback_content.upper().startswith("[EDIT_PLAN]"):
+        feedback = feedback_content[11:].strip()  # Remove "[EDIT_PLAN] "
+    else:
+        feedback = feedback_content
+    
+    # Convert Plan object to JSON string for the prompt
+    if hasattr(current_plan, 'model_dump_json'):
+        # It's a Plan object, convert to JSON
+        plan_json = current_plan.model_dump_json(indent=2)
+    else:
+        # It's already a string, use as is
+        plan_json = str(current_plan)
+    
+    # Create modification prompt
+    modification_prompt = f"""You are a plan modifier. You have an existing plan and user feedback. 
+Modify the plan based on the feedback while keeping the good parts of the original plan.
+
+ORIGINAL PLAN:
+{plan_json}
+
+USER FEEDBACK:
+{feedback}
+
+Please modify the plan based on the feedback. Return the modified plan in the same JSON format as the original.
+Focus on addressing the specific feedback while preserving the overall structure and good elements of the original plan.
+
+IMPORTANT: For step_type values, use ONLY simple strings:
+- Use "research" for information gathering steps
+- Use "processing" for data processing and calculation steps
+- Do NOT use complex values like "<StepType.RESEARCH: 'research'>"
+
+The step_type field must be exactly "research" or "processing" as simple strings.
+
+IMPORTANT: Include need_web_search field for each step:
+- Set need_web_search: true for research steps that require external data gathering
+- Set need_web_search: false for processing steps that do calculations or data processing."""
+
+    configurable = Configuration.from_runnable_config(config)
+    
+    if AGENT_LLM_MAP["planner"] == "basic":
+        llm = get_llm_by_type(AGENT_LLM_MAP["planner"]).with_structured_output(
+            Plan,
+            method="json_mode",
+        )
+    else:
+        llm = get_llm_by_type(AGENT_LLM_MAP["planner"])
+
+    # Generate modified plan
+    full_response = ""
+    if AGENT_LLM_MAP["planner"] == "basic":
+        response = llm.invoke([HumanMessage(content=modification_prompt)])
+        full_response = response.model_dump_json(indent=4, exclude_none=True)
+    else:
+        response = llm.stream([HumanMessage(content=modification_prompt)])
+        for chunk in response:
+            full_response += chunk.content
+    
+    logger.info(f"Plan modifier response: {full_response}")
+
+    try:
+        modified_plan = json.loads(repair_json_output(full_response))
+        new_plan = Plan.model_validate(modified_plan)
+        
+        return Command(
+            update={
+                "messages": [AIMessage(content=full_response, name="plan_modifier")],
+                "current_plan": new_plan,
+            },
+            goto="feedback_node",  # Go back to feedback node for review
+        )
+    except json.JSONDecodeError:
+        logger.warning("Plan modifier response is not a valid JSON")
+        return Command(goto="feedback_node")
+
+
 ##TODO: consider how to incorporate human feedback into the workflow
 def human_feedback_node(
     state,
-) -> Command[Literal["planner", "research_team", "reporter", "__end__"]]:
+) -> Command[Literal["plan_modifier", "research_team", "reporter", "__end__"]]:
     current_plan = state.get("current_plan", "")
     # check if human feedback is required
     human_feedback = state.get("human_feedback", False)
     if human_feedback:
-        feedback = interrupt("Please Review the Plan.")
-
+        # Simple terminal-based feedback
+        print("\n" + "="*50)
+        print("PLAN REVIEW REQUIRED")
+        print("="*50)
+        print("Current plan:")
+        if hasattr(current_plan, 'title'):
+            print(f"Title: {current_plan.title}")
+        if hasattr(current_plan, 'thought'):
+            print(f"Thought: {current_plan.thought}")
+        if hasattr(current_plan, 'steps'):
+            print("Steps:")
+            for i, step in enumerate(current_plan.steps, 1):
+                print(f"  {i}. {step.title}")
+        print("="*50)
+        print("Options:")
+        print("  [ACCEPTED] - Accept the plan and continue")
+        print("  [EDIT_PLAN] <your feedback> - Edit the plan")
+        print("="*50)
+        
+        feedback = input("Enter your feedback: ").strip()
+        
         # if the feedback is not accepted, return the planner node
         if feedback and str(feedback).upper().startswith("[EDIT_PLAN]"):
             return Command(
@@ -148,23 +266,32 @@ def human_feedback_node(
                         HumanMessage(content=feedback, name="feedback"),
                     ],
                 },
-                goto="planner",
+                goto="plan_modifier",
             )
         elif feedback and str(feedback).upper().startswith("[ACCEPTED]"):
             logger.info("Plan is accepted by user.")
         else:
-            raise TypeError(f"Interrupt value of {feedback} is not supported.")
+            # Default to accepted if no valid option provided
+            logger.info("No valid option provided, accepting plan by default.")
 
     # if the plan is accepted, run the following node
     plan_iterations = state["plan_iterations"] if state.get("plan_iterations", 0) else 0
     goto = "research_team"
     try:
-        current_plan = repair_json_output(current_plan)
-        # increment the plan iterations
-        plan_iterations += 1
-        # parse the plan
-        new_plan = json.loads(current_plan)
-        if new_plan["has_enough_context"]:
+        # Check if current_plan is already a Plan object
+        if hasattr(current_plan, 'has_enough_context'):
+            # It's already a Plan object, use it directly
+            new_plan = current_plan
+        else:
+            # It's a string, process it as before
+            current_plan = repair_json_output(current_plan)
+            # increment the plan iterations
+            plan_iterations += 1
+            # parse the plan
+            new_plan = json.loads(current_plan)
+            new_plan = Plan.model_validate(new_plan)
+        
+        if new_plan.has_enough_context:
             goto = "reporter"
     except json.JSONDecodeError:
         logger.warning("Planner response is not a valid JSON")
@@ -175,7 +302,7 @@ def human_feedback_node(
 
     return Command(
         update={
-            "current_plan": Plan.model_validate(new_plan),
+            "current_plan": new_plan,
             "plan_iterations": plan_iterations,
         },
         goto=goto,
