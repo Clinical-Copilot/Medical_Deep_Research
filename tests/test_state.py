@@ -74,7 +74,7 @@
 #     assert State.plan_iterations == 0
 #     assert State.current_plan is None
 #     assert State.final_report == ""
-#     assert State.auto_accepted_plan is False
+#     assert State.human_feedback is False
 #     assert State.enable_background_investigation is True
 #     assert State.background_investigation_results is None
 
@@ -112,7 +112,7 @@
 #         plan_iterations=2,
 #         current_plan=test_plan,
 #         final_report="Test report",
-#         auto_accepted_plan=True,
+#         human_feedback=True,
 #         enable_background_investigation=False,
 #         background_investigation_results="Test results",
 #     )
@@ -126,6 +126,4 @@
 #     assert len(state["current_plan"].steps) == 1
 #     assert state["current_plan"].steps[0].title == "Test Step"
 #     assert state["final_report"] == "Test report"
-#     assert state["auto_accepted_plan"] is True
-#     assert state["enable_background_investigation"] is False
-#     assert state["background_investigation_results"] == "Test results"
+#     assert state["human_feedback"] is True

@@ -38,6 +38,9 @@ class ChatRequest(BaseModel):
     max_step_num: int = Field(
         default=3, description="Maximum number of steps in a plan"
     )
+    human_feedback: bool = Field(
+        default=False, description="Whether to require human feedback on plans (default: False for auto-accept)"
+    )
 
 
 class WorkflowStep(BaseModel):
@@ -65,6 +68,7 @@ async def chat(request: ChatRequest):
             debug=False,
             max_plan_iterations=request.max_plan_iterations,
             max_step_num=request.max_step_num,
+            human_feedback=request.human_feedback,
         )
 
         # Process the workflow result

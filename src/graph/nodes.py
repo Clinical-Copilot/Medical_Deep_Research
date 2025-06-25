@@ -74,7 +74,7 @@ def coordinator_node(
 
 def planner_node(
     state: State, config: RunnableConfig
-) -> Command[Literal["human_feedback", "reporter"]]:
+) -> Command[Literal["feedback_node", "reporter"]]:
     """Planner node that generate the full plan."""
     logger.info("Planner generating full plan")
     configurable = Configuration.from_runnable_config(config)
@@ -127,7 +127,7 @@ def planner_node(
             "messages": [AIMessage(content=full_response, name="planner")],
             "current_plan": full_response,
         },
-        goto="human_feedback",
+        goto="feedback_node",
     )
 
 ##TODO: consider how to incorporate human feedback into the workflow
@@ -135,9 +135,9 @@ def human_feedback_node(
     state,
 ) -> Command[Literal["planner", "research_team", "reporter", "__end__"]]:
     current_plan = state.get("current_plan", "")
-    # check if the plan is auto accepted
-    auto_accepted_plan = state.get("auto_accepted_plan", False)
-    if not auto_accepted_plan:
+    # check if human feedback is required
+    human_feedback = state.get("human_feedback", False)
+    if human_feedback:
         feedback = interrupt("Please Review the Plan.")
 
         # if the feedback is not accepted, return the planner node

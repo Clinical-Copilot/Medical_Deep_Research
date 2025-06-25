@@ -89,7 +89,7 @@ async def chat_stream(request: ChatRequest):
             request.max_plan_iterations,
             request.max_step_num,
             request.max_search_results,
-            request.auto_accepted_plan,
+            request.human_feedback,
             request.interrupt_feedback,
             request.mcp_settings,
             request.enable_background_investigation,
@@ -104,7 +104,7 @@ async def _astream_workflow_generator(
     max_plan_iterations: int,
     max_step_num: int,
     max_search_results: int,
-    auto_accepted_plan: bool,
+    human_feedback: bool,
     interrupt_feedback: str,
     mcp_settings: dict,
     enable_background_investigation,
@@ -115,10 +115,10 @@ async def _astream_workflow_generator(
         "final_report": "",
         "current_plan": None,
         "observations": [],
-        "auto_accepted_plan": auto_accepted_plan,
+        "human_feedback": human_feedback,
         "enable_background_investigation": enable_background_investigation,
     }
-    if not auto_accepted_plan and interrupt_feedback:
+    if human_feedback and interrupt_feedback:
         resume_msg = f"[{interrupt_feedback}]"
         # add the last message to the resume message
         if messages:

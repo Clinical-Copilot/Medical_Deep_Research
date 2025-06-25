@@ -105,6 +105,7 @@ async def run_agent_workflow_async(
     max_plan_iterations: int = 1,
     max_step_num: int = 2,  # Reduced to prevent deep recursion
     output_format: str = "long-report",
+    human_feedback: bool = False,  # Whether to require human feedback (default: False for auto-accept)
 ):
     """Run the agent workflow asynchronously with the given user input.
 
@@ -114,6 +115,7 @@ async def run_agent_workflow_async(
         max_plan_iterations: Maximum number of plan iterations
         max_step_num: Maximum number of steps in a plan
         output_format: Output format - "long-report" or "short-report" (default: "long-report")
+        human_feedback: Whether to require human feedback (default: False for auto-accept)
 
     Returns:
         The final state after the workflow completes
@@ -125,7 +127,7 @@ async def run_agent_workflow_async(
     initial_state = {
         # Runtime Variables
         "messages": [{"role": "user", "content": user_input}],
-        "auto_accepted_plan": True,  # Auto-accept plans to reduce recursion
+        "human_feedback": human_feedback,  # False = auto-accept plans, True = require human feedback
         "plan_iterations": 0,  # Track plan iterations
         "current_plan": None,  # Initialize plan
         "observations": [],  # Track observations
