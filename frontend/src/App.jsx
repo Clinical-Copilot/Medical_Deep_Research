@@ -27,6 +27,23 @@ function App() {
       .replace(/\n{3,}/g, '\n\n');
   };
 
+  const formatPlanText = (planObj) => {
+    if (typeof planObj === 'string') return planObj;
+    let text = `Research Plan:\n\n`;
+    if (planObj.title) text += `Title: ${planObj.title}\n\n`;
+    if (planObj.thought) text += `Approach: ${planObj.thought}\n\n`;
+    if (Array.isArray(planObj.steps)) {
+      text += `Steps:\n`;
+      planObj.steps.forEach((step, i) => {
+        text += `${i + 1}. ${step.title}\n`;
+        if (step.description) {
+          text += `   ${step.description}\n`;
+        }
+      });
+    }
+    return text;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!input.trim()) return;
@@ -48,75 +65,69 @@ function App() {
         }),
       });
 
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
+      if (!response.ok || !response.body) {
+        throw new Error('Network response was not ok or stream was null');
       }
 
-      const data = await response.json();
-      console.log('Response data:', JSON.stringify(data, null, 2));
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder('utf-8');
+      let buffer = '';
 
-      if (data.status === 'success') {
-        if (data.data?.workflow_steps?.length > 0) {
-          data.data.workflow_steps.forEach(step => {
-            if (
-              step.type === 'plan' &&
-              step.content?.trim() &&
-              step.content.trim() !== 'Research Plan:' &&
-              step.content.trim() !== 'Plan:'
-            ) {
-              setMessages(prev => [...prev, {
-                type: 'plan',
-                content: step.content,
-                name: step.name || 'planner'
-              }]);
-            } else if (step.type === 'report' && step.content?.trim()) {
-              setMessages(prev => [...prev, {
-                type: 'report',
-                content: step.content,
-                name: step.name || 'reporter'
-              }]);
-            } else if (step.content?.trim()) {
-              setMessages(prev => [...prev, {
-                type: 'assistant',
-                content: step.content,
-                name: step.name || 'system'
-              }]);
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+
+        const lines = buffer.split('\n\n');
+        buffer = lines.pop(); // keep incomplete
+
+        for (let line of lines) {
+          if (line.startsWith('data: ')) {
+            const jsonStr = line.slice(6);
+            try {
+              const parsed = JSON.parse(jsonStr);
+              const { type, content, step_title } = parsed;
+
+              if (type === 'plan' && content) {
+                console.log('[PLAN]', content);
+                setMessages(prev => [...prev, {
+                  type: 'plan',
+                  content: formatPlanText(content),
+                  name: 'planner'
+                }]);
+              } else if (type === 'execution_res' && content) {
+                console.log('[EXECUTION RESULT]', step_title, content);
+                setMessages(prev => [...prev, {
+                  type: 'report',
+                  content,
+                  name: step_title || 'step'
+                }]);
+              } else if (
+                type === 'message' &&
+                content &&
+                content.role !== 'user'
+              ) {
+                console.log('[MESSAGE]', content.role, content.name, content.content);
+                setMessages(prev => [...prev, {
+                  type: 'assistant',
+                  content: content.content,
+                  name: content.name || 'system'
+                }]);
+              } else if (type === 'error') {
+                console.error('[ERROR]', content);
+                setMessages(prev => [...prev, {
+                  type: 'error',
+                  content: content || 'An unknown error occurred'
+                }]);
+              }
+            } catch (err) {
+              console.warn('[STREAM PARSE ERROR]', line, err);
             }
-          });
+          }
         }
-
-        if (data.data?.plan?.steps?.length > 0) {
-          data.data.plan.steps.forEach(step => {
-            if (step.execution_res?.trim()) {
-              setMessages(prev => [...prev, {
-                type: 'report',
-                content: step.execution_res,
-                name: step.title || 'step'
-              }]);
-            }
-          });
-        }
-
-        if (data.data?.coordinator_response?.trim()) {
-          setMessages(prev => [...prev, {
-            type: 'assistant',
-            content: data.data.coordinator_response,
-            name: 'coordinator'
-          }]);
-        }
-
-        if (!data.data?.workflow_steps && !data.data?.coordinator_response) {
-          setMessages(prev => [...prev, {
-            type: 'assistant',
-            content: 'I am Biomedical Deep Research. How can I help you today?',
-            name: 'system'
-          }]);
-        }
-      } else {
-        throw new Error(data.message || 'Failed to get response');
       }
     } catch (error) {
-      console.error('Error:', error);
+      console.error('[SUBMIT ERROR]', error);
       setMessages(prev => [...prev, {
         type: 'error',
         content: `Error: ${error.message}`

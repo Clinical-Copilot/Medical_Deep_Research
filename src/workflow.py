@@ -14,34 +14,27 @@ log_dir.mkdir(exist_ok=True)
 root_logger = logging.getLogger()
 root_logger.setLevel(logging.INFO)
 
-# Create simple formatter
-simple_formatter = logging.Formatter("%(message)s")
+formatter = logging.Formatter("%(message)s")
 
-# Console handler
 console_handler = logging.StreamHandler()
-console_handler.setFormatter(simple_formatter)
+console_handler.setFormatter(formatter)
 root_logger.addHandler(console_handler)
 
-# File handler
 file_handler = logging.FileHandler(
-            filename=log_dir / "meddr.log",
-            encoding='utf-8',
-            mode='a'  # Append mode to preserve logs
-        )
-file_handler.setFormatter(simple_formatter)
+    filename=log_dir / "meddr.log",
+    encoding='utf-8',
+    mode='a'
+)
+file_handler.setFormatter(formatter)
 root_logger.addHandler(file_handler)
 
-# Set all loggers to INFO level
 for logger_name in ["src", "src.graph", "src.graph.nodes", "src.graph.dev_mode"]:
     logging.getLogger(logger_name).setLevel(logging.INFO)
 
 logger = logging.getLogger(__name__)
-
-# Create the graph
 graph = build_graph()
 
 def serialize_message(message):
-    """Helper function to serialize a message object to a dict."""
     if isinstance(message, (HumanMessage, AIMessage)):
         return {
             "role": message.type,
@@ -54,7 +47,8 @@ def serialize_message(message):
         return {"role": "system", "content": str(message)}
 
 def serialize_plan(plan):
-    """Helper function to serialize a Plan object to a dict."""
+    logger.info(f"[serialize_plan] Plan type: {type(plan)}")
+
     if isinstance(plan, Plan):
         return {
             "has_enough_context": plan.has_enough_context,
@@ -70,42 +64,53 @@ def serialize_plan(plan):
                 for step in plan.steps
             ]
         }
+
     elif isinstance(plan, dict):
-        return plan
-    else:
-        return {"error": "Invalid plan format"}
+        # Unwrap if necessary
+        if "planner_output" in plan and isinstance(plan["planner_output"], dict):
+            logger.info("[serialize_plan] Unpacking 'planner_output'")
+            plan = plan["planner_output"]
+
+        steps = plan.get("steps", [])
+        if isinstance(steps, list):
+            logger.info("[serialize_plan] Treating as dict with steps")
+            return {
+                "title": plan.get("title", ""),
+                "thought": plan.get("thought", ""),
+                "steps": [
+                    {
+                        "title": step.get("title", ""),
+                        "description": step.get("description", ""),
+                        "step_type": step.get("step_type", None),
+                        "execution_res": step.get("execution_res", None)
+                    }
+                    for step in steps
+                ]
+            }
+
+    logger.warning("[serialize_plan] Invalid plan format")
+    logger.warning(f"[serialize_plan] Received: {plan}")
+    return {"error": "Invalid plan format"}
 
 async def run_agent_workflow_async(
     user_input: str,
     debug: bool = False,
     max_plan_iterations: int = 1,
-    max_step_num: int = 2,  # Reduced to prevent deep recursion
+    max_step_num: int = 2,
     output_format: str = "long-report"
 ):
-    """Run the agent workflow asynchronously with the given user input.
-
-    Args:
-        user_input: The user's query or request
-        debug: If True, enables debug level logging
-        max_plan_iterations: Maximum number of plan iterations
-        max_step_num: Maximum number of steps in a plan
-        output_format: Output format - "long-report" or "short-report" (default: "long-report")
-
-    Returns:
-        The final state after the workflow completes
-    """
     if not user_input:
         raise ValueError("Input could not be empty")
 
-    logger.info(f"Starting workflow with query: {user_input}")
+    logger.info(f"[workflow] Starting workflow with query: {user_input}")
     initial_state = {
-        # Runtime Variables
         "messages": [{"role": "user", "content": user_input}],
-        "auto_accepted_plan": True,  # Auto-accept plans to reduce recursion
-        "plan_iterations": 0,  # Track plan iterations
-        "current_plan": None,  # Initialize plan
-        "observations": []  # Track observations
+        "auto_accepted_plan": True,
+        "plan_iterations": 0,
+        "current_plan": None,
+        "observations": []
     }
+
     config = {
         "configurable": {
             "thread_id": "default",
@@ -124,47 +129,67 @@ async def run_agent_workflow_async(
                 }
             },
         },
-        "recursion_limit": 20,  # Increased to 20 for more flexibility
+        "recursion_limit": 20,
     }
+
     last_message_cnt = 0
+    current_plan_yielded = False
+    yielded_steps = set()
+
     try:
-        async for s in graph.astream(
-            input=initial_state, config=config, stream_mode="values"
-        ):  
+        async for s in graph.astream(input=initial_state, config=config, stream_mode="values"):
             try:
                 if isinstance(s, dict) and "messages" in s:
-                    if len(s["messages"]) <= last_message_cnt:
-                        continue
-                    last_message_cnt = len(s["messages"])
-                    message = s["messages"][-1]
-                    if isinstance(message, tuple):
-                        print(message[0])
-                    else:
-                        print(message.get('content', ''))
-                else:
-                    print(s)
-            except Exception as e:
-                print(f"Error: {str(e)}")
-        
-        # Serialize messages and plan before returning
-        if isinstance(s, dict):
-            if "messages" in s:
-                s["messages"] = [serialize_message(msg) for msg in s["messages"]]
-            if "current_plan" in s:
-                s["current_plan"] = serialize_plan(s["current_plan"])
-            
-            # Capture coordinator response from the last message
-            if "messages" in s and s["messages"]:
-                last_message = s["messages"][-1]
-                if isinstance(last_message, dict) and last_message.get("role") == "assistant":
-                    s["coordinator_response"] = last_message.get("content")
-        
-        # Return the final state
-        return s
-    except Exception as e:
-        logger.error(f"Workflow error: {str(e)}")
-        raise
+                    if len(s["messages"]) > last_message_cnt:
+                        new_msgs = s["messages"][last_message_cnt:]
+                        last_message_cnt = len(s["messages"])
+                        for msg in new_msgs:
+                            serialized = serialize_message(msg)
+                            yield {"type": "message", "content": serialized}
 
+                if isinstance(s, dict) and not current_plan_yielded and "current_plan" in s and s["current_plan"]:
+                    raw_plan = s["current_plan"]
+
+                    # Handle nested "planner_output" if it exists
+                    if isinstance(raw_plan, dict) and "planner_output" in raw_plan:
+                        logger.info("[workflow] Unpacking 'planner_output' from current_plan")
+                        raw_plan = raw_plan["planner_output"]
+
+                    logger.info(f"[workflow] RAW PLAN TYPE: {type(raw_plan)}")
+                    logger.info(f"[workflow] RAW PLAN VALUE: {raw_plan}")
+
+                    serialized_plan = serialize_plan(raw_plan)
+                    logger.info(f"[workflow] SERIALIZED PLAN: {serialized_plan}")
+
+                    yield {"type": "plan", "content": serialized_plan}
+                    current_plan_yielded = True
+
+                if isinstance(s, dict) and "current_plan" in s and s["current_plan"]:
+                    plan = s["current_plan"]
+                    if isinstance(plan, dict) and "planner_output" in plan:
+                        plan = plan["planner_output"]
+
+                    if isinstance(plan, Plan) or (isinstance(plan, dict) and "steps" in plan):
+                        steps = plan.steps if isinstance(plan, Plan) else plan["steps"]
+                        for step in steps:
+                            step_title = step.title if hasattr(step, "title") else step.get("title")
+                            step_res = step.execution_res if hasattr(step, "execution_res") else step.get("execution_res")
+                            if step_res and step_title not in yielded_steps:
+                                logger.info(f"[workflow] YIELDING STEP: {step_title}")
+                                yield {
+                                    "type": "execution_res",
+                                    "step_title": step_title,
+                                    "content": step_res
+                                }
+                                yielded_steps.add(step_title)
+
+            except Exception as e:
+                logger.exception("[workflow] Exception in stream loop")
+                yield {"type": "error", "content": str(e)}
+
+    except Exception as e:
+        logger.error(f"[workflow] Workflow error: {str(e)}")
+        yield {"type": "error", "content": str(e)}
 
 if __name__ == "__main__":
     print(graph.get_graph(xray=True).draw_mermaid())
