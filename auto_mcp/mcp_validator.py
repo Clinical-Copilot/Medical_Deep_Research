@@ -4,6 +4,7 @@
 import json
 import logging
 import subprocess
+import asyncio
 from typing import Dict, List, Optional, Any
 from dataclasses import dataclass
 from pathlib import Path
@@ -68,12 +69,23 @@ class MCPValidator:
             async def get_tools():
                 async with stdio_client(server_params) as (read, write):
                     async with ClientSession(read, write) as session:
-                        await session.initialize()
-                        listed_tools = await session.list_tools()
+                        try:
+                            await asyncio.wait_for(session.initialize(), timeout=20)
+                        except asyncio.TimeoutError:
+                            logger.error("MCP client handshake (initialize) timed out.")
+                            return []
+                        try:
+                            listed_tools = await asyncio.wait_for(session.list_tools(), timeout=15)
+                        except asyncio.TimeoutError:
+                            logger.error("MCP client list_tools timed out.")
+                            return []
                         return [tool.name for tool in listed_tools.tools]
             
-            import asyncio
-            return await get_tools()
+            try:
+                return await asyncio.wait_for(get_tools(), timeout=20.0)
+            except asyncio.TimeoutError:
+                logger.warning("MCP server connection timed out completely")
+                return []
             
         except ImportError:
             logger.warning("MCP client not available, using fallback method")

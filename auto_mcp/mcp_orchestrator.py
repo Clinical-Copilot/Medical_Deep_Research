@@ -66,7 +66,11 @@ class AutoMCPOrchestrator:
         if not urls:
             self._log("discovery", "No MCP server URLs found.")
             return {"success": False, "reason": "No MCP server URLs found.", "logs": self.logs}
-        
+        # URL filtering (only GitHub URLs for now to narrow down the search)
+        urls = [url for url in urls if "github.com" in url]
+        if not urls:
+            self._log("discovery", "No GitHub URLs found after filtering.")
+            return {"success": False, "reason": "No GitHub URLs found after filtering.", "logs": self.logs}
         # Prioritize URLs 
         for url in urls:
             candidate = MCPCandidate(url=url)
@@ -89,37 +93,31 @@ class AutoMCPOrchestrator:
                 config = self._generate_config(candidate.markdown_content, feedback_prompt)
                 if not config or not isinstance(config, dict):
                     self._log("config_fail", "Config generation failed.", url, iteration)
-                    continue  
+                    continue  # Try again if possible
                 # Extract config dict for this server
                 mcp_servers = config.get("mcp_servers", {})
                 if not mcp_servers:
                     self._log("config_fail", "No mcp_servers found in config.", url, iteration)
                     continue
-                # Use the first server in the config 
+                # Use the first server in the config (extend if multiple supported)
                 server_name, server_cfg = next(iter(mcp_servers.items()))
-                # Inject user requirements 
+                # Inject user requirements (e.g., required tools)
                 if "enabled_tools" in self.user_requirements:
                     server_cfg["enabled_tools"] = self.user_requirements["enabled_tools"]
                 candidate.config = server_cfg
-                # Validation
-                try:
-                    validation_result = await self.validator.validate_tool_alignment(server_cfg)
-                    candidate.validation_result = validation_result
-                    if not validation_result.missing_tools:
-                        candidate.success = True
-                        self._log("success", f"Valid MCP config found for {url}", url, iteration)
-                        self.candidates.append(candidate)
-                        break  # Success for this server
-                    else:
-                        feedback = ValidationFeedback(missing_tools=validation_result.missing_tools)
-                        candidate.validation_feedback = feedback.to_prompt()
-                        self._log("validation_feedback", candidate.validation_feedback, url, iteration)
-                except Exception as e:
-                    feedback = ValidationFeedback(missing_tools=[], error=str(e))
+                validation_result = await self.validator.validate_tool_alignment(server_cfg)
+                candidate.validation_result = validation_result
+                if not validation_result.missing_tools:
+                    candidate.success = True
+                    self._log("success", f"Valid MCP config found for {url}", url, iteration)
+                    self.candidates.append(candidate)
+                    break  # Success for this server
+                else:
+                    feedback = ValidationFeedback(missing_tools=validation_result.missing_tools)
                     candidate.validation_feedback = feedback.to_prompt()
-                    self._log("validation_error", candidate.validation_feedback, url, iteration)
+                    self._log("validation_feedback", candidate.validation_feedback, url, iteration)
             self.candidates.append(candidate)
-        # Select best candidate aka no missing tools!
+        # Select best candidate aka no missing tools
         best = next((c for c in self.candidates if c.success), None)
         if best:
             return {"success": True, "config": best.config, "url": best.url, "logs": self.logs}
@@ -128,7 +126,9 @@ class AutoMCPOrchestrator:
         return {"success": False, "reason": "No valid MCP config found.", "candidates": failure_report, "logs": self.logs}
 
     def _build_discovery_query(self) -> str:
-        # Build a search query from user requirements
+        # Use discovery_query if provided, else fallback to old logic
+        if "discovery_query" in self.user_requirements:
+            return self.user_requirements["discovery_query"]
         base = "MCP server Model Context Protocol"
         if "enabled_tools" in self.user_requirements:
             tools = ", ".join(self.user_requirements["enabled_tools"])
