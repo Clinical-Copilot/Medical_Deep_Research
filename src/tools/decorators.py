@@ -1,6 +1,7 @@
 # The project is built upon Bytedance MedDR
 # SPDX-License-Identifier: MIT
 
+import asyncio
 import logging
 import functools
 from typing import Any, Callable, Type, TypeVar, List, Dict, Union
@@ -41,6 +42,88 @@ def log_io(func: Callable) -> Callable:
         return result
 
     return wrapper
+
+# Global variable to store tool event callback
+_tool_event_callback = None
+
+def set_tool_event_callback(callback):
+    """Set a callback function to be called when tools are used."""
+    global _tool_event_callback
+    _tool_event_callback = callback
+
+def log_io_with_events(func: Callable) -> Callable:
+    """
+    A decorator that logs tool usage and emits events for real-time tracking.
+    """
+    @functools.wraps(func)
+    async def async_wrapper(*args: Any, **kwargs: Any) -> Any:
+        func_name = func.__name__
+        params = ", ".join(
+            [*(str(arg) for arg in args), *(f"{k}={v}" for k, v in kwargs.items())]
+        )
+        
+        # Log and emit start event
+        logger.info(f"Tool {func_name} called with parameters: {params}")
+        if _tool_event_callback:
+            await _tool_event_callback({
+                "type": "tool_start",
+                "tool_name": func_name,
+                "parameters": {k: v for k, v in kwargs.items()},
+                "display_name": _get_tool_display_name(func_name)
+            })
+
+        # Execute the function
+        if asyncio.iscoroutinefunction(func):
+            result = await func(*args, **kwargs)
+        else:
+            result = func(*args, **kwargs)
+
+        # Log and emit completion event
+        logger.info(f"Tool {func_name} returned: {result}")
+        if _tool_event_callback:
+            await _tool_event_callback({
+                "type": "tool_complete",
+                "tool_name": func_name,
+                "result": result,
+                "display_name": _get_tool_display_name(func_name)
+            })
+
+        return result
+
+    @functools.wraps(func)
+    def sync_wrapper(*args: Any, **kwargs: Any) -> Any:
+        func_name = func.__name__
+        params = ", ".join(
+            [*(str(arg) for arg in args), *(f"{k}={v}" for k, v in kwargs.items())]
+        )
+        
+        # Log start
+        logger.info(f"Tool {func_name} called with parameters: {params}")
+
+        # Execute the function
+        result = func(*args, **kwargs)
+
+        # Log completion
+        logger.info(f"Tool {func_name} returned: {result}")
+
+        return result
+
+    # Return async wrapper if function is async, sync wrapper otherwise
+    if asyncio.iscoroutinefunction(func):
+        return async_wrapper
+    else:
+        return sync_wrapper
+
+def _get_tool_display_name(tool_name: str) -> str:
+    """Get user-friendly display name for tools."""
+    display_names = {
+        "openai_search_tool": "Web Search",
+        "crawl_tool": "Web Crawling",
+        "arxiv_search": "Academic Search",
+        "github_trending": "GitHub Trending",
+        "python_repl": "Code Execution"
+    }
+    return display_names.get(tool_name, tool_name.replace("_", " ").title())
 
 
 class LoggedToolMixin:

@@ -39,6 +39,7 @@ class ChatRequest(BaseModel):
 async def chat(request: ChatRequest):
     async def event_stream():
         try:
+            print(f"[BACKEND] Starting workflow for query: {request.query}")
             # Yield results progressively from run_agent_workflow_async
             async for result in run_agent_workflow_async(
                 user_input=request.query,
@@ -46,9 +47,13 @@ async def chat(request: ChatRequest):
                 max_plan_iterations=request.max_plan_iterations,
                 max_step_num=request.max_step_num
             ):
+                print(f"[BACKEND] Yielding result: {result}")
                 yield f"data: {json.dumps(result)}\n\n"
+            
+            print(f"[BACKEND] Workflow completed")
 
         except Exception as e:
+            print(f"[BACKEND] Error in workflow: {str(e)}")
             yield f"event: error\ndata: {json.dumps({'error': str(e)})}\n\n"
 
     return StreamingResponse(event_stream(), media_type="text/event-stream")

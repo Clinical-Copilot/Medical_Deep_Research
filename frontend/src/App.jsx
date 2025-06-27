@@ -6,6 +6,7 @@ function App() {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState('');
+  const [activeTools, setActiveTools] = useState(new Map());
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
@@ -29,6 +30,12 @@ function App() {
 
   const formatPlanText = (planObj) => {
     if (typeof planObj === 'string') return planObj;
+    
+    // Handle error case - don't show plan block for errors
+    if (planObj.error) {
+      return null; // Return null to indicate no plan should be shown
+    }
+    
     let text = `Research Plan:\n\n`;
     if (planObj.title) text += `Title: ${planObj.title}\n\n`;
     if (planObj.thought) text += `Approach: ${planObj.thought}\n\n`;
@@ -55,6 +62,7 @@ function App() {
     setCurrentStep('Processing your request...');
 
     try {
+      console.log('[FETCH] Starting request to backend...');
       const response = await fetch('http://localhost:8000/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -65,36 +73,53 @@ function App() {
         }),
       });
 
+      console.log('[FETCH] Response status:', response.status);
+      console.log('[FETCH] Response headers:', response.headers);
+
       if (!response.ok || !response.body) {
-        throw new Error('Network response was not ok or stream was null');
+        throw new Error(`Network response was not ok: ${response.status} ${response.statusText}`);
       }
 
       const reader = response.body.getReader();
       const decoder = new TextDecoder('utf-8');
       let buffer = '';
 
+      console.log('[STREAM] Starting to read stream...');
       while (true) {
         const { done, value } = await reader.read();
-        if (done) break;
-        buffer += decoder.decode(value, { stream: true });
+        if (done) {
+          console.log('[STREAM] Stream ended');
+          break;
+        }
+        
+        const chunk = decoder.decode(value, { stream: true });
+        console.log('[STREAM] Raw chunk:', chunk);
+        buffer += chunk;
 
         const lines = buffer.split('\n\n');
         buffer = lines.pop(); // keep incomplete
 
         for (let line of lines) {
+          console.log('[STREAM] Processing line:', line);
           if (line.startsWith('data: ')) {
             const jsonStr = line.slice(6);
+            console.log('[STREAM] JSON string:', jsonStr);
             try {
               const parsed = JSON.parse(jsonStr);
+              console.log('[STREAM] Parsed data:', parsed);
               const { type, content, step_title } = parsed;
 
               if (type === 'plan' && content) {
                 console.log('[PLAN]', content);
-                setMessages(prev => [...prev, {
-                  type: 'plan',
-                  content: formatPlanText(content),
-                  name: 'planner'
-                }]);
+                const formattedPlan = formatPlanText(content);
+                // Only add plan message if formatting didn't return null (i.e., no error)
+                if (formattedPlan !== null) {
+                  setMessages(prev => [...prev, {
+                    type: 'plan',
+                    content: formattedPlan,
+                    name: 'planner'
+                  }]);
+                }
               } else if (type === 'execution_res' && content) {
                 console.log('[EXECUTION RESULT]', step_title, content);
                 setMessages(prev => [...prev, {
@@ -113,6 +138,39 @@ function App() {
                   content: content.content,
                   name: content.name || 'system'
                 }]);
+              } else if (type === 'tool_start' && content && content.tool_name) {
+                console.log('[TOOL START]', content);
+                setActiveTools(prev => {
+                  const newMap = new Map(prev);
+                  newMap.set(content.tool_name, {
+                    name: content.display_name || content.tool_name,
+                    status: 'running',
+                    startTime: Date.now()
+                  });
+                  return newMap;
+                });
+              } else if (type === 'tool_complete' && content && content.tool_name) {
+                console.log('[TOOL COMPLETE]', content);
+                setActiveTools(prev => {
+                  const newMap = new Map(prev);
+                  const tool = newMap.get(content.tool_name);
+                  if (tool) {
+                    newMap.set(content.tool_name, {
+                      ...tool,
+                      status: 'completed',
+                      endTime: Date.now()
+                    });
+                    // Remove completed tool after 2 seconds
+                    setTimeout(() => {
+                      setActiveTools(current => {
+                        const updated = new Map(current);
+                        updated.delete(content.tool_name);
+                        return updated;
+                      });
+                    }, 2000);
+                  }
+                  return newMap;
+                });
               } else if (type === 'error') {
                 console.error('[ERROR]', content);
                 setMessages(prev => [...prev, {
@@ -135,6 +193,57 @@ function App() {
     } finally {
       setIsLoading(false);
       setCurrentStep('');
+      setActiveTools(new Map()); // Clear any remaining tools
+    }
+  };
+
+  const getToolIcon = (toolName) => {
+    const icons = {
+      'Web Search': '🔍',
+      'Web Crawling': '🌐',
+      'Academic Search': '📚',
+      'Code Execution': '💻',
+      'GitHub Trending': '⭐'
+    };
+    return icons[toolName] || '🔧';
+  };
+
+  const renderActiveTools = () => {
+    try {
+      if (!activeTools || activeTools.size === 0) return null;
+
+      return (
+        <div className="active-tools-container">
+          <div className="active-tools-header">
+            <span className="tools-label">Active Tools</span>
+          </div>
+          <div className="active-tools-list">
+            {Array.from(activeTools.entries()).map(([toolName, tool]) => {
+              if (!tool || !toolName) return null;
+              return (
+                <div 
+                  key={toolName} 
+                  className={`tool-indicator ${tool.status || 'running'}`}
+                >
+                  <span className="tool-icon">{getToolIcon(tool.name || toolName)}</span>
+                  <span className="tool-name">{tool.name || toolName}</span>
+                  <div className="tool-status">
+                    {tool.status === 'running' && (
+                      <div className="tool-spinner"></div>
+                    )}
+                    {tool.status === 'completed' && (
+                      <div className="tool-checkmark">✓</div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      );
+    } catch (error) {
+      console.error('Error rendering active tools:', error);
+      return null;
     }
   };
 
@@ -211,6 +320,14 @@ function App() {
                 {renderMessage(message)}
               </div>
             ))}
+            {(() => {
+              try {
+                return renderActiveTools();
+              } catch (error) {
+                console.error('Tool render error:', error);
+                return null;
+              }
+            })()}
             {isLoading && (
               <div className="message system">
                 <div className="loading">

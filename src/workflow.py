@@ -5,6 +5,7 @@ from pathlib import Path
 from src.graph import build_graph
 from langchain_core.messages import HumanMessage, AIMessage
 from src.prompts.planner_model import Plan
+from src.tools.decorators import set_tool_event_callback
 
 # Create logs directory if it doesn't exist
 log_dir = Path("logs")
@@ -103,6 +104,17 @@ async def run_agent_workflow_async(
         raise ValueError("Input could not be empty")
 
     logger.info(f"[workflow] Starting workflow with query: {user_input}")
+    
+    # Store reference to yielder for tool events
+    tool_events_queue = asyncio.Queue()
+    
+    async def tool_event_handler(event):
+        """Handle tool events and add them to queue for yielding."""
+        await tool_events_queue.put(event)
+    
+    # Set up tool event callback
+    set_tool_event_callback(tool_event_handler)
+    
     initial_state = {
         "messages": [{"role": "user", "content": user_input}],
         "auto_accepted_plan": True,
@@ -139,16 +151,29 @@ async def run_agent_workflow_async(
     try:
         async for s in graph.astream(input=initial_state, config=config, stream_mode="values"):
             try:
+                # Check for any tool events first
+                while not tool_events_queue.empty():
+                    try:
+                        tool_event = tool_events_queue.get_nowait()
+                        logger.info(f"[workflow] Yielding tool event: {tool_event}")
+                        yield tool_event
+                    except asyncio.QueueEmpty:
+                        break
+                
+                logger.info(f"[workflow] Processing state update: messages count = {len(s.get('messages', []))}")
                 if isinstance(s, dict) and "messages" in s:
                     if len(s["messages"]) > last_message_cnt:
                         new_msgs = s["messages"][last_message_cnt:]
                         last_message_cnt = len(s["messages"])
+                        logger.info(f"[workflow] Yielding {len(new_msgs)} new messages")
                         for msg in new_msgs:
                             serialized = serialize_message(msg)
+                            logger.info(f"[workflow] Yielding message: {serialized}")
                             yield {"type": "message", "content": serialized}
 
                 if isinstance(s, dict) and not current_plan_yielded and "current_plan" in s and s["current_plan"]:
                     raw_plan = s["current_plan"]
+                    logger.info(f"[workflow] Found current_plan in state: {raw_plan}")
 
                     # Handle nested "planner_output" if it exists
                     if isinstance(raw_plan, dict) and "planner_output" in raw_plan:
@@ -161,8 +186,12 @@ async def run_agent_workflow_async(
                     serialized_plan = serialize_plan(raw_plan)
                     logger.info(f"[workflow] SERIALIZED PLAN: {serialized_plan}")
 
-                    yield {"type": "plan", "content": serialized_plan}
-                    current_plan_yielded = True
+                    # Only yield plan if it's not an error
+                    if not (isinstance(serialized_plan, dict) and "error" in serialized_plan):
+                        yield {"type": "plan", "content": serialized_plan}
+                        current_plan_yielded = True
+                    else:
+                        logger.info("[workflow] Skipping plan yield due to serialization error")
 
                 if isinstance(s, dict) and "current_plan" in s and s["current_plan"]:
                     plan = s["current_plan"]
@@ -186,6 +215,9 @@ async def run_agent_workflow_async(
             except Exception as e:
                 logger.exception("[workflow] Exception in stream loop")
                 yield {"type": "error", "content": str(e)}
+        
+        # Log that stream has ended
+        logger.info(f"[workflow] Stream ended. Total messages yielded: {last_message_cnt}")
 
     except Exception as e:
         logger.error(f"[workflow] Workflow error: {str(e)}")

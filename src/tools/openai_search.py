@@ -9,7 +9,7 @@ from urllib.parse import urlsplit, urlunsplit, parse_qsl, urlencode, unquote
 from openai import OpenAI
 from dotenv import load_dotenv
 from langchain_core.tools import tool
-from src.tools.decorators import process_queries
+from src.tools.decorators import process_queries, log_io_with_events
 from src.utils.query_processor import QueryStrategy
 
 load_dotenv()
@@ -82,6 +82,7 @@ def _extract_urls_from_metadata(msg: Any) -> List[str]:
     return urls
 
 @tool
+@log_io_with_events
 @process_queries(
     strategy=QueryStrategy.PARAPHRASE,
     max_variations=3

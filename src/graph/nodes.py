@@ -68,8 +68,9 @@ def coordinator_node(
         )
         logger.debug(f"Coordinator response: {response}")
         # Add the coordinator's response to the messages when it terminates the workflow
+        coordinator_message = AIMessage(content=response.content, name="coordinator")
         return Command(
-            update={"messages": [AIMessage(content=response.content, name="coordinator")]},
+            update={"messages": state["messages"] + [coordinator_message]},
             goto=goto
         )
 
