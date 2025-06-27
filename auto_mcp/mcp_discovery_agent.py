@@ -6,7 +6,7 @@ import logging
 from typing import List
 from langchain_core.messages import HumanMessage
 
-from src.tools import openai_search_tool
+from src.tools import google_search_tool
 from src.llms.llm import get_llm_by_type
 
 logger = logging.getLogger(__name__)
@@ -20,7 +20,7 @@ class MCPDiscoveryAgent:
         
     async def discover_mcp_servers(self, query: str) -> List[str]:
         """
-        Discover MCP server URLs using search tools.
+        Discover MCP server URLs using Google Custom Search API (for now).
         
         Args:
             query: Search query for MCP servers (e.g., "MCP server github", "Model Context Protocol server")
@@ -30,16 +30,14 @@ class MCPDiscoveryAgent:
         """
         logger.info(f"Searching for MCP servers with query: {query}")
         
-        # Use OpenAI search to find MCP server URLs
-        search_result = await openai_search_tool.ainvoke({"query": query})
-        
+        # Use Google search to find MCP server URLs
+        search_result = google_search_tool.invoke({"query": query, "num_results": 10})
         if "error" in search_result:
             logger.error(f"Search failed: {search_result['error']}")
             return []
-        
-        urls = search_result.get("urls", [])
+        results = search_result.get("results", [])
+        urls = [item["link"] for item in results if "link" in item]
         logger.info(f"Found {len(urls)} potential MCP server URLs")
-        
         return urls
 
 

@@ -16,6 +16,7 @@ from .tooluniverse_regulations import (
 from .tooluniverse_tools import (
     get_drug_warnings
 )
+from .google_search import google_search_tool
 
 __all__ = [
     "crawl_tool",
@@ -23,6 +24,7 @@ __all__ = [
     "mcp_google_search",
     "litesense_tool",
     "openai_search_tool",
+    "google_search_tool",
     "get_drug_warnings",
     "get_drug_warnings_by_drug_name",
     "get_boxed_warning_info_by_drug_name",
