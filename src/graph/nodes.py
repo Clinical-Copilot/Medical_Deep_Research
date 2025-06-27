@@ -241,19 +241,19 @@ def human_feedback_node(
         print("\n" + "="*50)
         print("PLAN REVIEW REQUIRED")
         print("="*50)
-        print("Current plan:")
-        if hasattr(current_plan, 'title'):
-            print(f"Title: {current_plan.title}")
-        if hasattr(current_plan, 'thought'):
-            print(f"Thought: {current_plan.thought}")
-        if hasattr(current_plan, 'steps'):
-            print("Steps:")
-            for i, step in enumerate(current_plan.steps, 1):
-                print(f"  {i}. {step.title}")
+        # print("Current plan:")
+        # if hasattr(current_plan, 'title'):
+        #     print(f"Title: {current_plan.title}")
+        # if hasattr(current_plan, 'thought'):
+        #     print(f"Thought: {current_plan.thought}")
+        # if hasattr(current_plan, 'steps'):
+        #     print("Steps:")
+        #     for i, step in enumerate(current_plan.steps, 1):
+        #         print(f"  {i}. {step.title}")
         print("="*50)
         print("Options:")
         print("  [ACCEPTED] - Accept the plan and continue")
-        print("  [EDIT_PLAN] <your feedback> - Edit the plan")
+        print("  [EDIT_PLAN] <your feedback>")
         print("="*50)
         
         feedback = input("Enter your feedback: ").strip()
@@ -527,6 +527,38 @@ def reporter_node(state: State, config: RunnableConfig = None):
     # Use different prompt template based on output format
     if output_format == "short-report":
         invoke_messages = apply_prompt_template("short_reporter", input_)
+    elif output_format not in ["long-report", "short-report"]:
+        # Custom format - use LLM to dynamically generate prompt based on user requirements
+        prompt_generator = f"""You are a prompt engineering expert. Based on the user's requirements, generate a comprehensive prompt for a research report writer.
+
+        User Requirements: {output_format}
+
+        Generate a detailed prompt that:
+        1. Understands the user's intention and requirements
+        2. Provides clear instructions for the report structure and style
+        3. Maintains professional standards and proper citations
+        4. Adapts the format, tone, and content based on user needs
+        5. Includes specific guidance for the AI reporter
+
+        The prompt should be comprehensive and detailed, covering:
+        - Role and responsibilities of the reporter
+        - Report structure and organization
+        - Writing style and tone
+        - Citation format and requirements
+        - Data integrity guidelines
+        - Any specific formatting or content requirements
+
+        Generate the prompt now:"""
+
+        # Use LLM to generate the custom prompt
+        custom_prompt_response = get_llm_by_type(AGENT_LLM_MAP["reporter"]).invoke([HumanMessage(content=prompt_generator)])
+        custom_prompt = custom_prompt_response.content
+        
+        # Create messages with the dynamically generated prompt
+        invoke_messages = [
+            HumanMessage(content=custom_prompt),
+            HumanMessage(content=input_["messages"][0].content)
+        ]
     else:  # long-report (default)
         invoke_messages = apply_prompt_template("long_reporter", input_)
     
@@ -535,6 +567,8 @@ def reporter_node(state: State, config: RunnableConfig = None):
     # Add format-specific reminder
     if output_format == "short-report":
         format_reminder = "IMPORTANT: Provide a concise answer with key points only. Focus on the most essential findings in 2-3 sentences. Be direct and to the point."
+    elif output_format not in ["long-report", "short-report"]:
+        format_reminder = f"IMPORTANT: Follow the dynamically generated prompt above. The user's original requirements were: '{output_format}'. Ensure the report matches these requirements while maintaining professional standards and proper citations."
     else:  # long-report (default)
         format_reminder = "IMPORTANT: Structure your report according to the format in the prompt. Remember to include:\n\n1. Key Points - A bulleted list of the most important findings\n2. Overview - A brief introduction to the topic\n3. Detailed Analysis - Organized into logical sections\n4. Survey Note (optional) - For more comprehensive reports\n5. Key Citations - List all references at the end\n\nFor citations, DO NOT include inline citations in the text. Instead, place all citations in the 'Key Citations' section at the end using the format: `- [Source Title](URL)`. Include an empty line between each citation for better readability.\n\nPRIORITIZE USING MARKDOWN TABLES for data presentation and comparison. Use tables whenever presenting comparative data, statistics, features, or options. Structure tables with clear headers and aligned columns. Example table format:\n\n| Feature | Description | Pros | Cons |\n|---------|-------------|------|------|\n| Feature 1 | Description 1 | Pros 1 | Cons 1 |\n| Feature 2 | Description 2 | Pros 2 | Cons 2 |"
 

@@ -114,7 +114,7 @@ async def run_agent_workflow_async(
         debug: If True, enables debug level logging
         max_plan_iterations: Maximum number of plan iterations
         max_step_num: Maximum number of steps in a plan
-        output_format: Output format - "long-report" or "short-report" (default: "long-report")
+        output_format: Output format - "long-report", "short-report", or custom requirements (default: "long-report")
         human_feedback: Whether to require human feedback (default: False for auto-accept)
 
     Returns:

@@ -29,7 +29,7 @@ def ask(
         debug: If True, enables debug level logging
         max_plan_iterations: Maximum number of plan iterations
         max_step_num: Maximum number of steps in a plan
-        output_format: Output format - "long-report" or "short-report" (default: "long-report")
+        output_format: Output format - "long-report", "short-report", or custom requirements (default: "long-report")
         human_feedback: Whether to require human feedback on plans (default: False for auto-accept)
     """
     asyncio.run(
@@ -53,7 +53,7 @@ def main(
         debug: If True, enables debug level logging
         max_plan_iterations: Maximum number of plan iterations
         max_step_num: Maximum number of steps in a plan
-        output_format: Output format - "long-report" or "short-report" (default: "long-report")
+        output_format: Output format - "long-report", "short-report", or custom requirements (default: "long-report")
         human_feedback: Whether to require human feedback on plans (default: False for auto-accept)
     """
     # Choose questions
@@ -107,7 +107,7 @@ if __name__ == "__main__":
         "--output_format",
         type=str,
         default="long-report",
-        help="Output format - 'long-report' or 'short-report' (default: 'long-report')",
+        help="Output format - 'long-report', 'short-report', or custom requirements (e.g., 'focus on technical details, include code examples')",
     )
     parser.add_argument(
         "--human_feedback",
