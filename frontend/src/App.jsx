@@ -8,6 +8,8 @@ function App() {
   const [currentStep, setCurrentStep] = useState('');
   const [activeTools, setActiveTools] = useState(new Map());
   const messagesEndRef = useRef(null);
+  const stepCounter = useRef(0);
+  const resultTimer = useRef(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -30,12 +32,8 @@ function App() {
 
   const formatPlanText = (planObj) => {
     if (typeof planObj === 'string') return planObj;
-    
-    // Handle error case - don't show plan block for errors
-    if (planObj.error) {
-      return null; // Return null to indicate no plan should be shown
-    }
-    
+    if (planObj.error) return null;
+
     let text = `Research Plan:\n\n`;
     if (planObj.title) text += `Title: ${planObj.title}\n\n`;
     if (planObj.thought) text += `Approach: ${planObj.thought}\n\n`;
@@ -59,10 +57,9 @@ function App() {
     setInput('');
     setMessages(prev => [...prev, { type: 'user', content: userMessage }]);
     setIsLoading(true);
-    setCurrentStep('Processing your request...');
+    setCurrentStep('Creating your research plan...');
 
     try {
-      console.log('[FETCH] Starting request to backend...');
       const response = await fetch('http://localhost:8000/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -73,9 +70,6 @@ function App() {
         }),
       });
 
-      console.log('[FETCH] Response status:', response.status);
-      console.log('[FETCH] Response headers:', response.headers);
-
       if (!response.ok || !response.body) {
         throw new Error(`Network response was not ok: ${response.status} ${response.statusText}`);
       }
@@ -84,35 +78,25 @@ function App() {
       const decoder = new TextDecoder('utf-8');
       let buffer = '';
 
-      console.log('[STREAM] Starting to read stream...');
       while (true) {
         const { done, value } = await reader.read();
-        if (done) {
-          console.log('[STREAM] Stream ended');
-          break;
-        }
-        
+        if (done) break;
+
         const chunk = decoder.decode(value, { stream: true });
-        console.log('[STREAM] Raw chunk:', chunk);
         buffer += chunk;
 
         const lines = buffer.split('\n\n');
-        buffer = lines.pop(); // keep incomplete
+        buffer = lines.pop();
 
         for (let line of lines) {
-          console.log('[STREAM] Processing line:', line);
           if (line.startsWith('data: ')) {
             const jsonStr = line.slice(6);
-            console.log('[STREAM] JSON string:', jsonStr);
             try {
               const parsed = JSON.parse(jsonStr);
-              console.log('[STREAM] Parsed data:', parsed);
               const { type, content, step_title } = parsed;
 
               if (type === 'plan' && content) {
-                console.log('[PLAN]', content);
                 const formattedPlan = formatPlanText(content);
-                // Only add plan message if formatting didn't return null (i.e., no error)
                 if (formattedPlan !== null) {
                   setMessages(prev => [...prev, {
                     type: 'plan',
@@ -120,26 +104,15 @@ function App() {
                     name: 'planner'
                   }]);
                 }
-              } else if (type === 'execution_res' && content) {
-                console.log('[EXECUTION RESULT]', step_title, content);
-                setMessages(prev => [...prev, {
-                  type: 'report',
-                  content,
-                  name: step_title || 'step'
-                }]);
-              } else if (
-                type === 'message' &&
-                content &&
-                content.role !== 'user'
-              ) {
-                console.log('[MESSAGE]', content.role, content.name, content.content);
-                setMessages(prev => [...prev, {
-                  type: 'assistant',
-                  content: content.content,
-                  name: content.name || 'system'
-                }]);
+                setCurrentStep('Research plan created. Preparing first step...');
+                stepCounter.current = 1;
+
+                if (resultTimer.current) clearTimeout(resultTimer.current);
+                resultTimer.current = setTimeout(() => {
+                  setCurrentStep('Generating research result #1...');
+                }, 15000);
               } else if (type === 'tool_start' && content && content.tool_name) {
-                console.log('[TOOL START]', content);
+                setCurrentStep(`Running tools for step ${stepCounter.current} in the research plan...`);
                 setActiveTools(prev => {
                   const newMap = new Map(prev);
                   newMap.set(content.tool_name, {
@@ -150,7 +123,6 @@ function App() {
                   return newMap;
                 });
               } else if (type === 'tool_complete' && content && content.tool_name) {
-                console.log('[TOOL COMPLETE]', content);
                 setActiveTools(prev => {
                   const newMap = new Map(prev);
                   const tool = newMap.get(content.tool_name);
@@ -160,7 +132,6 @@ function App() {
                       status: 'completed',
                       endTime: Date.now()
                     });
-                    // Remove completed tool after 2 seconds
                     setTimeout(() => {
                       setActiveTools(current => {
                         const updated = new Map(current);
@@ -171,12 +142,48 @@ function App() {
                   }
                   return newMap;
                 });
+              } else if (type === 'execution_res' && content) {
+                setMessages(prev => [...prev, {
+                  type: 'report',
+                  content,
+                  name: step_title || 'step'
+                }]);
+
+                stepCounter.current += 1;
+                if (stepCounter.current <= 3) {
+                  setCurrentStep(`Preparing step ${stepCounter.current} of the research plan...`);
+                  if (resultTimer.current) clearTimeout(resultTimer.current);
+                  // Only allow loading message if stepCounter is still within 3 steps
+                  if (stepCounter.current < 4) {
+                    resultTimer.current = setTimeout(() => {
+                      setCurrentStep(`Generating research result #${stepCounter.current}...`);
+                    }, 15000);
+                  }
+                } else {
+                  setCurrentStep('');
+                }
+              } else if (
+                type === 'message' &&
+                content &&
+                content.role !== 'user'
+              ) {
+                setMessages(prev => [...prev, {
+                  type: 'assistant',
+                  content: content.content,
+                  name: content.name || 'system'
+                }]);
+              } else if (type === 'final_report' && content) {
+                setMessages(prev => [...prev, {
+                  type: 'conclusion',
+                  content,
+                  name: 'reporter'
+                }]);
               } else if (type === 'error') {
-                console.error('[ERROR]', content);
                 setMessages(prev => [...prev, {
                   type: 'error',
                   content: content || 'An unknown error occurred'
                 }]);
+                setCurrentStep('An error occurred.');
               }
             } catch (err) {
               console.warn('[STREAM PARSE ERROR]', line, err);
@@ -185,15 +192,17 @@ function App() {
         }
       }
     } catch (error) {
-      console.error('[SUBMIT ERROR]', error);
       setMessages(prev => [...prev, {
         type: 'error',
         content: `Error: ${error.message}`
       }]);
+      setCurrentStep('An error occurred.');
     } finally {
       setIsLoading(false);
-      setCurrentStep('');
-      setActiveTools(new Map()); // Clear any remaining tools
+      setTimeout(() => setCurrentStep('All steps completed.'), 300);
+      setTimeout(() => setCurrentStep(''), 1500);
+      setActiveTools(new Map());
+      if (resultTimer.current) clearTimeout(resultTimer.current);
     }
   };
 
@@ -251,6 +260,7 @@ function App() {
     const getMessageIcon = (type, name) => {
       if (type === 'plan') return '📋';
       if (type === 'report') return '📝';
+      if (type === 'conclusion') return '✅';
       if (type === 'error') return '❌';
       if (type === 'user') return '👤';
       switch (name) {
@@ -266,6 +276,7 @@ function App() {
     const getMessageTitle = (type, name) => {
       if (type === 'plan') return 'Research Plan';
       if (type === 'report') return 'Research Result';
+      if (type === 'conclusion') return 'Final Report';
       if (type === 'user') return 'You';
       if (type === 'error') return 'Error';
       switch (name) {
@@ -281,6 +292,7 @@ function App() {
     const isMarkdownContent = (
       message.type === 'plan' ||
       message.type === 'report' ||
+      message.type === 'conclusion' ||
       message.name === 'coordinator' ||
       message.name === 'assistant'
     );
@@ -320,14 +332,7 @@ function App() {
                 {renderMessage(message)}
               </div>
             ))}
-            {(() => {
-              try {
-                return renderActiveTools();
-              } catch (error) {
-                console.error('Tool render error:', error);
-                return null;
-              }
-            })()}
+            {renderActiveTools()}
             {isLoading && (
               <div className="message system">
                 <div className="loading">
