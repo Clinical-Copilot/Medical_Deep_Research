@@ -23,8 +23,8 @@ root_logger.addHandler(console_handler)
 
 file_handler = logging.FileHandler(
     filename=log_dir / "meddr.log",
-    encoding='utf-8',
-    mode='a'
+    encoding="utf-8",
+    mode="a",  # Append mode to preserve logs
 )
 file_handler.setFormatter(formatter)
 root_logger.addHandler(file_handler)
@@ -35,17 +35,19 @@ for logger_name in ["src", "src.graph", "src.graph.nodes", "src.graph.dev_mode"]
 logger = logging.getLogger(__name__)
 graph = build_graph()
 
+
 def serialize_message(message):
     if isinstance(message, (HumanMessage, AIMessage)):
         return {
             "role": message.type,
             "content": message.content,
-            "name": getattr(message, "name", None)
+            "name": getattr(message, "name", None),
         }
     elif isinstance(message, dict):
         return message
     else:
         return {"role": "system", "content": str(message)}
+
 
 def serialize_plan(plan):
     logger.info(f"[serialize_plan] Plan type: {type(plan)}")
@@ -60,10 +62,10 @@ def serialize_plan(plan):
                     "title": step.title,
                     "description": step.description,
                     "step_type": step.step_type.value if step.step_type else None,
-                    "execution_res": step.execution_res
+                    "execution_res": step.execution_res,
                 }
                 for step in plan.steps
-            ]
+            ],
         }
 
     elif isinstance(plan, dict):
@@ -93,12 +95,13 @@ def serialize_plan(plan):
     logger.warning(f"[serialize_plan] Received: {plan}")
     return {"error": "Invalid plan format"}
 
+
 async def run_agent_workflow_async(
     user_input: str,
     debug: bool = False,
     max_plan_iterations: int = 1,
-    max_step_num: int = 2,
-    output_format: str = "long-report"
+    max_step_num: int = 2,  # Reduced to prevent deep recursion
+    output_format: str = "long-report",
 ):
     if not user_input:
         raise ValueError("Input could not be empty")
@@ -117,11 +120,11 @@ async def run_agent_workflow_async(
     
     initial_state = {
         "messages": [{"role": "user", "content": user_input}],
-        "auto_accepted_plan": True,
-        "plan_iterations": 0,
-        "current_plan": None,
-        "observations": [],
-        "final_report": ""
+        "auto_accepted_plan": True,  # Auto-accept plans to reduce recursion
+        "plan_iterations": 0,  # Track plan iterations
+        "current_plan": None,  # Initialize plan
+        "observations": [],  # Track observations
+        "final_report": ""  # Initialize final report
     }
     logger.info(f"[workflow] Created initial state with keys: {list(initial_state.keys())}")
 

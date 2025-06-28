@@ -62,10 +62,18 @@ static/browser_history/*.gif
 .langgraph_api/
 CLAUDE.md
 
+changes.md
+.claude/
+
 # some testing files
 coverage.xml
+
 coverage/
 meddr_env/
 *.ipynb
 test_google.py
-query_processor.py
+
+CLAUDE.md
+
+coverage/meddr_env/
+meddr_env/

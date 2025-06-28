@@ -28,12 +28,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Input model
 class ChatRequest(BaseModel):
-    query: str = Field(..., min_length=1, max_length=1000, description="The user's question or query")
-    max_plan_iterations: int = Field(default=1, description="Maximum number of plan iterations")
-    max_step_num: int = Field(default=3, description="Maximum number of steps in a plan")
-
+    query: str = Field(
+        ..., min_length=1, max_length=1000, description="The user's question or query"
+    )
+    max_plan_iterations: int = Field(
+        default=1, description="Maximum number of plan iterations"
+    )
+    max_step_num: int = Field(
+        default=3, description="Maximum number of steps in a plan"
+    )
 
 @app.post("/api/chat")
 async def chat(request: ChatRequest):
@@ -57,7 +61,6 @@ async def chat(request: ChatRequest):
             yield f"event: error\ndata: {json.dumps({'error': str(e)})}\n\n"
 
     return StreamingResponse(event_stream(), media_type="text/event-stream")
-
 
 @app.get("/api/health")
 async def health_check():

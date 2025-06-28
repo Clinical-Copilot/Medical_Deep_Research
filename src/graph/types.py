@@ -11,6 +11,7 @@ from src.prompts.planner_model import Plan
 
 class State(TypedDict):
     """State type for the graph."""
+
     messages: List[Dict[str, Any]]
     current_plan: Optional[Plan]
     plan_iterations: int

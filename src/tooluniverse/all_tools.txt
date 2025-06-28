@@ -1,0 +1,647 @@
+Total ToolUniverse tools available: 215
+================================================================================
+
+  1. OpenTargets_get_associated_targets_by_disease_efoId
+     OpenTargets_get_associated_targets_by_disease_efoId: Find targets associated with a specific disease or phenotype based on efoId.
+
+  2. OpenTargets_get_diseases_phenotypes_by_target_ensembl
+     OpenTargets_get_diseases_phenotypes_by_target_ensembl: Find diseases or phenotypes associated with a specific target using ensemblId.
+
+  3. OpenTargets_target_disease_evidence
+     OpenTargets_target_disease_evidence: Explore evidence that supports a specific target-disease association. Input is disease efoId and target ensemblID.
+
+  4. OpenTargets_get_drug_warnings_by_chemblId
+     OpenTargets_get_drug_warnings_by_chemblId: Retrieve warnings for a specific drug using ChEMBL ID.
+
+  5. OpenTargets_get_drug_mechanisms_of_action_by_chemblId
+     OpenTargets_get_drug_mechanisms_of_action_by_chemblId: Retrieve the mechanisms of action associated with a specific drug using chemblId.
+
+  6. OpenTargets_get_associated_drugs_by_disease_efoId
+     OpenTargets_get_associated_drugs_by_disease_efoId: Retrieve known drugs associated with a specific disease by disease efoId.
+
+  7. OpenTargets_get_similar_entities_by_disease_efoId
+     OpenTargets_get_similar_entities_by_disease_efoId: Retrieve similar entities for a given disease efoId using a model trained with PubMed.
+
+  8. OpenTargets_get_similar_entities_by_drug_chemblId
+     OpenTargets_get_similar_entities_by_drug_chemblId: Retrieve similar entities for a given drug chemblId using a model trained with PubMed.
+
+  9. OpenTargets_get_similar_entities_by_target_ensemblID
+     OpenTargets_get_similar_entities_by_target_ensemblID: Retrieve similar entities for a given target ensemblID using a model trained with PubMed.
+
+ 10. OpenTargets_get_associated_phenotypes_by_disease_efoId
+     OpenTargets_get_associated_phenotypes_by_disease_efoId: Find HPO phenotypes asosciated with the specified disease efoId.
+
+ 11. OpenTargets_get_drug_withdrawn_blackbox_status_by_chemblId
+     OpenTargets_get_drug_withdrawn_blackbox_status_by_chemblId: Find withdrawn and black-box warning statuses for a specific drug by chemblId.
+
+ 12. OpenTargets_search_category_counts_by_query_string
+     OpenTargets_search_category_counts_by_query_string: Get the count of entries in each entity category (disease, target, drug) based on a query string.
+
+ 13. OpenTargets_get_disease_id_description_by_name
+     OpenTargets_get_disease_id_description_by_name: Retrieve the efoId and additional details of a disease based on its name.
+
+ 14. OpenTargets_get_drug_id_description_by_name
+     OpenTargets_get_drug_id_description_by_name: Fetch the drug chemblId and description based on the drug generic name.
+
+ 15. OpenTargets_get_drug_chembId_by_generic_name
+     OpenTargets_get_drug_chembId_by_generic_name: Fetch the drug chemblId and description based on the drug generic name.
+
+ 16. OpenTargets_get_drug_indications_by_chemblId
+     OpenTargets_get_drug_indications_by_chemblId: Fetch indications (treatable phenotypes/diseases) for a given drug chemblId.
+
+ 17. OpenTargets_get_target_gene_ontology_by_ensemblID
+     OpenTargets_get_target_gene_ontology_by_ensemblID: Retrieve Gene Ontology annotations for a specific target by Ensembl ID.
+
+ 18. OpenTargets_get_target_homologues_by_ensemblID
+     OpenTargets_get_target_homologues_by_ensemblID: Fetch homologues for a specific target by Ensembl ID.
+
+ 19. OpenTargets_get_target_safety_profile_by_ensemblID
+     OpenTargets_get_target_safety_profile_by_ensemblID: Retrieve known target safety liabilities for a specific target Ensembl ID.
+
+ 20. OpenTargets_get_biological_mouse_models_by_ensemblID
+     OpenTargets_get_biological_mouse_models_by_ensemblID: Retrieve biological mouse models, including allelic compositions and genetic backgrounds, for a specific target.
+
+ 21. OpenTargets_get_target_genomic_location_by_ensemblID
+     OpenTargets_get_target_genomic_location_by_ensemblID: Retrieve genomic location data for a specific target, including chromosome, start, end, and strand.
+
+ 22. OpenTargets_get_target_subcellular_locations_by_ensemblID
+     OpenTargets_get_target_subcellular_locations_by_ensemblID: Retrieve information about subcellular locations for a specific target ensemblID.
+
+ 23. OpenTargets_get_target_synonyms_by_ensemblID
+     OpenTargets_get_target_synonyms_by_ensemblID: Retrieve synonyms for specified target, including alternative names and symbols, using given ensemblID.
+
+ 24. OpenTargets_get_target_tractability_by_ensemblID
+     OpenTargets_get_target_tractability_by_ensemblID: Retrieve tractability assessments, including modality and values, for a specific target ensembl ID.
+
+ 25. OpenTargets_get_target_classes_by_ensemblID
+     OpenTargets_get_target_classes_by_ensemblID: Retrieve the target classes associated with a specific target ensemblID.
+
+ 26. OpenTargets_get_target_enabling_packages_by_ensemblID
+     OpenTargets_get_target_enabling_packages_by_ensemblID: Retrieve the Target Enabling Packages (TEP) associated with a specific target ensemblID.
+
+ 27. OpenTargets_get_target_interactions_by_ensemblID
+     OpenTargets_get_target_interactions_by_ensemblID: Retrieve interaction data for a specific target ensemblID, including interaction partners and evidence.
+
+ 28. OpenTargets_get_disease_ancestors_parents_by_efoId
+     OpenTargets_get_disease_ancestors_parents_by_efoId: Retrieve the disease ancestors and parents in the ontology using the disease EFO ID.
+
+ 29. OpenTargets_get_disease_descendants_children_by_efoId
+     OpenTargets_get_disease_descendants_children_by_efoId: Retrieve the disease descendants and children in the ontology using the disease EFO ID.
+
+ 30. OpenTargets_get_disease_locations_by_efoId
+     OpenTargets_get_disease_locations_by_efoId: Retrieve the disease's direct location and indirect location disease terms and IDs using the disease EFO ID.
+
+ 31. OpenTargets_get_disease_synonyms_by_efoId
+     OpenTargets_get_disease_synonyms_by_efoId: Retrieve disease synonyms by its EFO ID.
+
+ 32. OpenTargets_get_disease_description_by_efoId
+     OpenTargets_get_disease_description_by_efoId: Retrieve disease description, name, database cros references, obsolete terms, and whether it's a therapeutic area, all using the specified efoId.
+
+ 33. OpenTargets_get_disease_therapeutic_areas_by_efoId
+     OpenTargets_get_disease_therapeutic_areas_by_efoId: Retrieve the therapeutic areas associated with a specific disease efoId.
+
+ 34. OpenTargets_get_drug_adverse_events_by_chemblId
+     OpenTargets_get_drug_adverse_events_by_chemblId: Retrieve significant adverse events reported for a specific drug chemblId.
+
+ 35. OpenTargets_get_known_drugs_by_drug_chemblId
+     OpenTargets_get_known_drugs_by_drug_chemblId: Get a list of known drugs and associated information using the specified chemblId.
+
+ 36. OpenTargets_get_parent_child_molecules_by_drug_chembl_ID
+     OpenTargets_get_parent_child_molecules_by_drug_chembl_ID: Get parent and child molecules of specified drug chemblId.
+
+ 37. OpenTargets_get_approved_indications_by_drug_chemblId
+     OpenTargets_get_approved_indications_by_drug_chemblId: Retrieve detailed information about multiple drugs using a list of ChEMBL IDs.
+
+ 38. OpenTargets_get_drug_description_by_chemblId
+     OpenTargets_get_drug_description_by_chemblId: Get drug name, year of first approval, type, cross references, and max clinical trial phase based on specified chemblId.
+
+ 39. OpenTargets_get_drug_synonyms_by_chemblId
+     OpenTargets_get_drug_synonyms_by_chemblId: Retrieve the synonyms associated with a specific drug chemblId.
+
+ 40. OpenTargets_get_drug_trade_names_by_chemblId
+     OpenTargets_get_drug_trade_names_by_chemblId: Retrieve the trade names associated with a specific drug chemblId.
+
+ 41. OpenTargets_get_drug_approval_status_by_chemblId
+     OpenTargets_get_drug_approval_status_by_chemblId: Retrieve the approval status of a specific drug chemblId.
+
+ 42. OpenTargets_get_chemical_probes_by_target_ensemblID
+     OpenTargets_get_chemical_probes_by_target_ensemblID: Retrieve chemical probes associated with a specific target using its ensemblID.
+
+ 43. OpenTargets_drug_pharmacogenomics_data
+     OpenTargets_drug_pharmacogenomics_data: Retrieve pharmacogenomics data for a specific drug, including evidence levels and genotype annotations.
+
+ 44. OpenTargets_get_associated_drugs_by_target_ensemblID
+     OpenTargets_get_associated_drugs_by_target_ensemblID: Get known drugs and information (e.g. id, name, MoA) associated with a specific target ensemblID, including clinical trial phase and mechanism of action of the drugs.
+
+ 45. OpenTargets_get_associated_diseases_by_drug_chemblId
+     OpenTargets_get_associated_diseases_by_drug_chemblId: Retrieve the list of diseases associated with a specific drug chemblId based on clinical trial data or post-marketed drugs.
+
+ 46. OpenTargets_get_associated_targets_by_drug_chemblId
+     OpenTargets_get_associated_targets_by_drug_chemblId: Retrieve the list of targets linked to a specific drug chemblId based on its mechanism of action.
+
+ 47. OpenTargets_multi_entity_search_by_query_string
+     OpenTargets_multi_entity_search_by_query_string: Perform a multi-entity search based on a query string, filtering by entity names and pagination settings.
+
+ 48. OpenTargets_get_gene_ontology_terms_by_goID
+     OpenTargets_get_gene_ontology_terms_by_goID: Retrieve Gene Ontology terms based on a list of GO IDs.
+
+ 49. OpenTargets_get_target_constraint_info_by_ensemblID
+     OpenTargets_get_target_constraint_info_by_ensemblID: Retrieve genetic constraint information for a specific target ensemblID, including expected and observed values, and scores.
+
+ 50. OpenTargets_get_publications_by_disease_efoId
+     OpenTargets_get_publications_by_disease_efoId: Retrieve publications related to a disease efoId, including PubMed IDs and publication dates.
+
+ 51. OpenTargets_get_publications_by_target_ensemblID
+     OpenTargets_get_publications_by_target_ensemblID: Retrieve publications related to a target ensemblID, including PubMed IDs and publication dates.
+
+ 52. OpenTargets_get_publications_by_drug_chemblId
+     OpenTargets_get_publications_by_drug_chemblId: Retrieve publications related to a drug chemblId, including PubMed IDs and publication dates.
+
+ 53. OpenTargets_get_target_id_description_by_name
+     OpenTargets_get_target_id_description_by_name: Get the ensemblId and description based on the target name.
+
+ 54. FDA_get_active_ingredient_info_by_drug_name
+     FDA_get_active_ingredient_info_by_drug_name: Fetch a list of active ingredients in a specific drug product.
+
+ 55. FDA_get_dosage_and_storage_information_by_drug_name
+     FDA_get_dosage_and_storage_information_by_drug_name: Retrieve dosage and storage information for a specific drug.
+
+ 56. FDA_get_drug_names_by_abuse_info
+     FDA_get_drug_names_by_abuse_info: Retrieve drug names based on information about types of abuse and adverse reactions pertinent to those types of abuse. Warning: This tool only outputs a predefined limited number of drug names and does not cover all possible drugs. Use with caution.
+
+ 57. FDA_get_abuse_info_by_drug_name
+     FDA_get_abuse_info_by_drug_name: Retrieve information about types of abuse based on the drug name.
+
+ 58. FDA_get_drug_names_by_accessories
+     FDA_get_drug_names_by_accessories: Retrieve drug names based on the accessories field information.
+
+ 59. FDA_get_accessories_info_by_drug_name
+     FDA_get_accessories_info_by_drug_name: Retrieve information about accessories based on the drug name.
+
+ 60. FDA_get_drug_names_by_active_ingredient
+     FDA_get_drug_names_by_active_ingredient: Retrieve drug names based on the active ingredient information.
+
+ 61. FDA_get_manufacturer_name_NDC_number_by_drug_name
+     FDA_get_manufacturer_name_NDC_number_by_drug_name: Retrieve detailed information about a drug's active ingredient, FDA application number, manufacturer name, National Drug Code (NDC) number, and route of administration; all based on the drug name.
+
+ 62. FDA_get_drug_names_by_application_number_NDC_number
+     FDA_get_drug_names_by_application_number_NDC_number: Retrieve drug names based on the specified FDA application number or National Drug Code (NDC) number.
+
+ 63. FDA_get_drug_name_by_adverse_reaction
+     FDA_get_drug_name_by_adverse_reaction: Retrieve the drug name based on specific adverse reactions reported. Warning: This tool only outputs a predefined limited number of drug names and does not cover all possible drugs. Use with caution.
+
+ 64. FDA_get_adverse_reactions_by_drug_name
+     FDA_get_adverse_reactions_by_drug_name: Retrieve adverse reactions information based on the drug name.
+
+ 65. FDA_get_drug_names_by_alarm
+     FDA_get_drug_names_by_alarm: Retrieve drug names based on the presence of specific alarms, which are related to adverse reaction events. Warning: This tool only outputs a predefined limited number of drug names and does not cover all possible drugs. Use with caution.
+
+ 66. FDA_get_alarms_by_drug_name
+     FDA_get_alarms_by_drug_name: Retrieve alarms based on the specified drug name.
+
+ 67. FDA_get_drug_names_by_animal_pharmacology_info
+     FDA_get_drug_names_by_animal_pharmacology_info: Retrieve drug names based on animal pharmacology and toxicology information.  Warning: This tool only outputs a predefined limited number of drug names and does not cover all possible drugs. Use with caution.
+
+ 68. FDA_get_animal_pharmacology_info_by_drug_name
+     FDA_get_animal_pharmacology_info_by_drug_name: Retrieve animal pharmacology and toxicology information based on drug names.
+
+ 69. FDA_get_drug_name_by_info_on_conditions_for_doctor_consultation
+     FDA_get_drug_name_by_info_on_conditions_for_doctor_consultation: Retrieve the drug names that require asking a doctor before use due to a patient's specific conditions and symptoms.  Warning: This tool only outputs a predefined limited number of drug names and does not cover all possible drugs. Use with caution.
+
+ 70. FDA_get_info_on_conditions_for_doctor_consultation_by_drug_name
+     FDA_get_info_on_conditions_for_doctor_consultation_by_drug_name: Get information about when a doctor should be consulted before using a specific drug.
+
+ 71. FDA_get_drug_names_by_consulting_doctor_pharmacist_info
+     FDA_get_drug_names_by_consulting_doctor_pharmacist_info: Retrieve drug names based on information about when a doctor or pharmacist should be consulted regarding drug interactions. Warning: This tool only outputs a predefined limited number of drug names and does not cover all possible drugs. Use with caution.
+
+ 72. FDA_get_info_on_consulting_doctor_pharmacist_by_drug_name
+     FDA_get_info_on_consulting_doctor_pharmacist_by_drug_name: Get information about when a doctor or pharmacist should be consulted regarding drug interactions for a specific drug.
+
+ 73. FDA_get_drug_names_by_assembly_installation_info
+     FDA_get_drug_names_by_assembly_installation_info: Retrieve drug names based on assembly or installation instructions. Warning: This tool only outputs a predefined limited number of drug names and does not cover all possible drugs. Use with caution.
+
+ 74. FDA_get_assembly_installation_info_by_drug_name
+     FDA_get_assembly_installation_info_by_drug_name: Retrieve assembly or installation instructions based on drug names.
+
+ 75. FDA_get_drug_names_by_boxed_warning
+     FDA_get_drug_names_by_boxed_warning: Retrieve drug names that have specific boxed warnings and adverse effects.
+
+ 76. FDA_get_boxed_warning_info_by_drug_name
+     FDA_get_boxed_warning_info_by_drug_name: Retrieve boxed warning and adverse effects information for a specific drug.
+
+ 77. FDA_get_drug_name_by_calibration_instructions
+     FDA_get_drug_name_by_calibration_instructions: Retrieve the drug name based on the calibration instructions provided.
+
+ 78. FDA_get_calibration_instructions_by_drug_name
+     FDA_get_calibration_instructions_by_drug_name: Retrieve calibration instructions based on the specified drug name.
+
+ 79. FDA_get_drugs_by_carcinogenic_mutagenic_fertility
+     FDA_get_drugs_by_carcinogenic_mutagenic_fertility: Retrieve drug names based on the presence of carcinogenic, mutagenic, or fertility impairment information.
+
+ 80. FDA_get_carcinogenic_mutagenic_fertility_by_drug_name
+     FDA_get_carcinogenic_mutagenic_fertility_by_drug_name: Retrieve carcinogenic, mutagenic, or fertility impairment information based on the drug name.
+
+ 81. FDA_get_drug_name_by_SPL_ID
+     FDA_get_drug_name_by_SPL_ID: Retrieve the drug name based on the FDA application number, NUI unique identifier, document ID of a specific version of the drug's Structured Product Label (SPL), or set ID of the drug's Structured Product Label that works across label versions.
+
+ 82. FDA_get_drug_names_by_clinical_pharmacology
+     FDA_get_drug_names_by_clinical_pharmacology: Retrieve drug names based on clinical pharmacology information. Warning: This tool only outputs a predefined limited number of drug names and does not cover all possible drugs. Use with caution.
+
+ 83. FDA_get_clinical_pharmacology_by_drug_name
+     FDA_get_clinical_pharmacology_by_drug_name: Retrieve clinical pharmacology information based on drug names.
+
+ 84. FDA_get_drug_names_by_clinical_studies
+     FDA_get_drug_names_by_clinical_studies: Retrieve drug names based on the presence of clinical studies information.
+
+ 85. FDA_get_clinical_studies_info_by_drug_name
+     FDA_get_clinical_studies_info_by_drug_name: Retrieve clinical studies information based on the drug name.
+
+ 86. FDA_get_drug_names_by_contraindications
+     FDA_get_drug_names_by_contraindications: Retrieve drug names based on specific contraindications information.
+
+ 87. FDA_get_contraindications_by_drug_name
+     FDA_get_contraindications_by_drug_name: Retrieve contraindications information based on the drug name.
+
+ 88. FDA_get_drug_names_by_controlled_substance_DEA_schedule
+     FDA_get_drug_names_by_controlled_substance_DEA_schedule: Retrieve drug names based on the Drug Enforcement Administration (DEA) schedule information.
+
+ 89. FDA_get_controlled_substance_DEA_schedule_info_by_drug_name
+     FDA_get_controlled_substance_DEA_schedule_info_by_drug_name: Retrieve information about the controlled substance Drug Enforcement Administratino (DEA) schedule for a specific drug.
+
+ 90. FDA_get_drug_name_by_dependence_info
+     FDA_get_drug_name_by_dependence_info: Retrieve the drug name based on information about dependence characteristics.
+
+ 91. FDA_get_dependence_info_by_drug_name
+     FDA_get_dependence_info_by_drug_name: Retrieve information about dependence characteristics based on the drug name.
+
+ 92. FDA_get_drug_names_by_disposal_info
+     FDA_get_drug_names_by_disposal_info: Retrieve drug names based on disposal and waste handling information.
+
+ 93. FDA_get_disposal_info_by_drug_name
+     FDA_get_disposal_info_by_drug_name: Retrieve disposal and waste handling information based on the drug name.
+
+ 94. FDA_get_drug_name_by_dosage_info
+     FDA_get_drug_name_by_dosage_info: Retrieve the drug name based on dosage and administration information.
+
+ 95. FDA_get_drug_names_by_dosage_forms_and_strengths_info
+     FDA_get_drug_names_by_dosage_forms_and_strengths_info: Retrieve drug names based on specific dosage forms and strengths information.
+
+ 96. FDA_get_dosage_forms_and_strengths_by_drug_name
+     FDA_get_dosage_forms_and_strengths_by_drug_name: Retrieve dosage forms and strengths information based on the drug name.
+
+ 97. FDA_get_drug_names_by_abuse_dependence_info
+     FDA_get_drug_names_by_abuse_dependence_info: Retrieve the drug name based on information about drug abuse and dependence, including whether the drug is a controlled substances, the types of possible abuse, and adverse reactions relevant to those abuse types.
+
+ 98. FDA_get_abuse_dependence_info_by_drug_name
+     FDA_get_abuse_dependence_info_by_drug_name: Get information about drug abuse and dependence based on the drug name, specifically information on whether the drug is a controlled substances, the types of possible abuse, and adverse reactions relevant to those abuse types.
+
+ 99. FDA_get_drug_names_by_lab_test_interference
+     FDA_get_drug_names_by_lab_test_interference: Retrieve drug names that have known interference with laboratory tests.
+
+100. FDA_get_lab_test_interference_info_by_drug_name
+     FDA_get_lab_test_interference_info_by_drug_name: Retrieve information about laboratory test interferences for a specific drug.
+
+101. FDA_get_drug_names_by_drug_interactions
+     FDA_get_drug_names_by_drug_interactions: Retrieve a list of drug names that have the specified drug interactions.
+
+102. FDA_get_drug_interactions_by_drug_name
+     FDA_get_drug_interactions_by_drug_name: Retrieve drug interactions based on the specified drug name.
+
+103. FDA_get_drug_names_by_effective_time
+     FDA_get_drug_names_by_effective_time: Retrieve drug names based on the effective time of the labeling document.
+
+104. FDA_get_effective_time_by_drug_name
+     FDA_get_effective_time_by_drug_name: Retrieve effective time of the labeling document based on the drug name.
+
+105. FDA_get_drug_name_by_environmental_warning
+     FDA_get_drug_name_by_environmental_warning: Retrieve the drug name based on the specified environmental warnings.
+
+106. FDA_get_environmental_warning_by_drug_name
+     FDA_get_environmental_warning_by_drug_name: Fetch environmental warnings for a specific drug based on its name.
+
+107. FDA_get_drug_names_by_food_safety_warnings
+     FDA_get_drug_names_by_food_safety_warnings: Retrieve drug names based on specific food safety warnings.
+
+108. FDA_get_drug_names_by_general_precautions
+     FDA_get_drug_names_by_general_precautions: Retrieve drug names based on specific general precautions information.
+
+109. FDA_get_general_precautions_by_drug_name
+     FDA_get_general_precautions_by_drug_name: Retrieve general precautions information based on the drug name.
+
+110. FDA_get_drug_names_by_geriatric_use
+     FDA_get_drug_names_by_geriatric_use: Retrieve drug names that have specific information about geriatric use.
+
+111. FDA_get_geriatric_use_info_by_drug_name
+     FDA_get_geriatric_use_info_by_drug_name: Retrieve information about geriatric use based on the drug name.
+
+112. FDA_get_dear_health_care_provider_letter_info_by_drug_name
+     FDA_get_dear_health_care_provider_letter_info_by_drug_name: Fetch information about dear health care provider letters for a specific drug. The letters are sent by drug manufacturers to provide new or updated information about the drug.
+
+113. FDA_get_drug_names_by_dear_health_care_provider_letter_info
+     FDA_get_drug_names_by_dear_health_care_provider_letter_info: Fetch drug names based on information about dear health care provider letters. The letters are sent by drug manufacturers to provide new or updated information about the drug.
+
+114. FDA_get_drug_names_by_health_claim
+     FDA_get_drug_names_by_health_claim: Retrieve drug names based on specific health claims.
+
+115. FDA_get_health_claims_by_drug_name
+     FDA_get_health_claims_by_drug_name: Retrieve health claims associated with a specific drug name.
+
+116. FDA_get_drug_name_by_document_id
+     FDA_get_drug_name_by_document_id: Retrieve the drug name based on the document ID.
+
+117. FDA_get_document_id_by_drug_name
+     FDA_get_document_id_by_drug_name: Retrieve the document ID based on the drug name.
+
+118. FDA_get_drug_name_by_inactive_ingredient
+     FDA_get_drug_name_by_inactive_ingredient: Retrieve the drug name based on the inactive ingredient information.
+
+119. FDA_get_inactive_ingredient_info_by_drug_name
+     FDA_get_inactive_ingredient_info_by_drug_name: Fetch a list of inactive ingredients in a specific drug product based on the drug name.
+
+120. FDA_get_drug_names_by_indication
+     FDA_get_drug_names_by_indication: Retrieve a list of drug names based on a specific indication or usage.
+
+121. FDA_get_indications_by_drug_name
+     FDA_get_indications_by_drug_name: Retrieve indications and usage information based on a specific drug name.
+
+122. FDA_get_drug_names_by_information_for_owners_or_caregivers
+     FDA_get_drug_names_by_information_for_owners_or_caregivers: Retrieve drug names based on information for owners or caregivers.
+
+123. FDA_get_information_for_owners_or_caregivers_by_drug_name
+     FDA_get_information_for_owners_or_caregivers_by_drug_name: Retrieve specific information for owners or caregivers based on the drug name.
+
+124. FDA_get_info_for_patients_by_drug_name
+     FDA_get_info_for_patients_by_drug_name: Fetch information for patients based on the drug name.
+
+125. FDA_get_drug_names_by_instructions_for_use
+     FDA_get_drug_names_by_instructions_for_use: Retrieve drug names based on specific instructions for use.
+
+126. FDA_get_instructions_for_use_by_drug_name
+     FDA_get_instructions_for_use_by_drug_name: Retrieve instructions for use information based on the drug name.
+
+127. FDA_retrieve_drug_name_by_device_use
+     FDA_retrieve_drug_name_by_device_use: Retrieve the drug name based on the intended use of the device.
+
+128. FDA_retrieve_device_use_by_drug_name
+     FDA_retrieve_device_use_by_drug_name: Retrieve the intended use of the device based on the drug name.
+
+129. FDA_get_drug_names_by_child_safety_info
+     FDA_get_drug_names_by_child_safety_info: Retrieve drug names based on whether the product should be kept out of the reach of children and instructions about what to do in the case of accidental contact or ingestion.
+
+130. FDA_get_child_safety_info_by_drug_name
+     FDA_get_child_safety_info_by_drug_name: Retrieve child safety information for a specific drug based on its name.
+
+131. FDA_get_drug_name_by_labor_and_delivery_info
+     FDA_get_drug_name_by_labor_and_delivery_info: Retrieve the drug name based on information about the drug’s use during labor or delivery.
+
+132. FDA_get_labor_and_delivery_info_by_drug_name
+     FDA_get_labor_and_delivery_info_by_drug_name: Retrieve information about the drug’s use during labor or delivery based on the drug name.
+
+133. FDA_get_drug_names_by_lab_tests
+     FDA_get_drug_names_by_lab_tests: Retrieve drug names based on laboratory tests information.
+
+134. FDA_get_lab_tests_by_drug_name
+     FDA_get_lab_tests_by_drug_name: Retrieve laboratory tests information based on drug names.
+
+135. FDA_get_mechanism_of_action_by_drug_name
+     FDA_get_mechanism_of_action_by_drug_name: Retrieve the mechanism of action information for a specific drug.
+
+136. FDA_get_drug_names_by_mechanism_of_action
+     FDA_get_drug_names_by_mechanism_of_action: Retrieve drug names based on the specified mechanism of action information.
+
+137. FDA_get_drug_name_by_microbiology
+     FDA_get_drug_name_by_microbiology: Retrieve the drug name based on microbiology field information.
+
+138. FDA_get_microbiology_info_by_drug_name
+     FDA_get_microbiology_info_by_drug_name: Retrieve microbiology information based on the drug name.
+
+139. FDA_get_drug_names_by_nonclinical_toxicology_info
+     FDA_get_drug_names_by_nonclinical_toxicology_info: Retrieve drug names based on nonclinical toxicology information.
+
+140. FDA_get_nonclinical_toxicology_info_by_drug_name
+     FDA_get_nonclinical_toxicology_info_by_drug_name: Retrieve nonclinical toxicology information based on drug names.
+
+141. FDA_get_drug_names_by_nonteratogenic_effects
+     FDA_get_drug_names_by_nonteratogenic_effects: Retrieve drug names based on the presence of nonteratogenic effects information.
+
+142. FDA_get_nonteratogenic_effects_by_drug_name
+     FDA_get_nonteratogenic_effects_by_drug_name: Retrieve information about nonteratogenic effects based on the drug name.
+
+143. FDA_get_drug_names_by_info_for_nursing_mothers
+     FDA_get_drug_names_by_info_for_nursing_mothers: Retrieve drug names based on information related to nursing mothers.
+
+144. FDA_get_info_for_nursing_mothers_by_drug_name
+     FDA_get_info_for_nursing_mothers_by_drug_name: Retrieve information about nursing mothers for a specific drug.
+
+145. FDA_get_drug_name_by_other_safety_info
+     FDA_get_drug_name_by_other_safety_info: Retrieve the drug name based on the provided safety information. This tool looks through safety information that may not be specified in other fields.
+
+146. FDA_get_other_safety_info_by_drug_name
+     FDA_get_other_safety_info_by_drug_name: Retrieve safety information that may not be specified in other fields based on the provided drug name.
+
+147. FDA_get_drug_names_by_overdosage_info
+     FDA_get_drug_names_by_overdosage_info: Retrieve drug names based on information about signs, symptoms, and laboratory findings of acute overdosage.
+
+148. FDA_get_overdosage_info_by_drug_name
+     FDA_get_overdosage_info_by_drug_name: Retrieve information about signs, symptoms, and laboratory findings of acute overdosage based on the drug name.
+
+149. FDA_get_drug_name_by_principal_display_panel
+     FDA_get_drug_name_by_principal_display_panel: Retrieve the drug name based on the content of the principal display panel of the product package.
+
+150. FDA_get_principal_display_panel_by_drug_name
+     FDA_get_principal_display_panel_by_drug_name: Retrieve the content of the principal display panel of the product package based on the drug name.
+
+151. FDA_retrieve_drug_names_by_patient_medication_info
+     FDA_retrieve_drug_names_by_patient_medication_info: Retrieve drug names based on patient medication information, which is about safe use of the drug.
+
+152. FDA_retrieve_patient_medication_info_by_drug_name
+     FDA_retrieve_patient_medication_info_by_drug_name: Retrieve patient medication information (which is about safe use of the drug) based on drug names.
+
+153. FDA_get_drug_names_by_pediatric_use
+     FDA_get_drug_names_by_pediatric_use: Retrieve drug names based on pediatric use information.
+
+154. FDA_get_pediatric_use_info_by_drug_name
+     FDA_get_pediatric_use_info_by_drug_name: Retrieve pediatric use information based on drug names.
+
+155. FDA_get_drug_name_by_pharmacodynamics
+     FDA_get_drug_name_by_pharmacodynamics: Retrieve the drug name based on pharmacodynamics information.
+
+156. FDA_get_pharmacodynamics_by_drug_name
+     FDA_get_pharmacodynamics_by_drug_name: Retrieve pharmacodynamics information based on the drug name.
+
+157. FDA_get_drug_name_by_pharmacogenomics
+     FDA_get_drug_name_by_pharmacogenomics: Retrieve the drug name based on pharmacogenomics field information.
+
+158. FDA_get_pharmacogenomics_info_by_drug_name
+     FDA_get_pharmacogenomics_info_by_drug_name: Retrieve pharmacogenomics information based on the drug name.
+
+159. FDA_get_drug_names_by_pharmacokinetics
+     FDA_get_drug_names_by_pharmacokinetics: Retrieve drug names based on specific pharmacokinetics information, such as absorption, distribution, elimination, metabolism, drug interactions, and specific patient populations.
+
+160. FDA_get_pharmacokinetics_by_drug_name
+     FDA_get_pharmacokinetics_by_drug_name: Retrieve pharmacokinetics information (e.g. absorption, distribution, elimination, metabolism, drug interactions, and specific patient populations) for a specific drug based on its name.
+
+161. FDA_get_drug_name_by_precautions
+     FDA_get_drug_name_by_precautions: Retrieve the drug name based on the precautions field information.
+
+162. FDA_get_precautions_by_drug_name
+     FDA_get_precautions_by_drug_name: Retrieve precautions information based on the drug name.
+
+163. FDA_get_drug_names_by_pregnancy_effects_info
+     FDA_get_drug_names_by_pregnancy_effects_info: Retrieve drug names based on information about effects the drug may have on pregnant women or on a fetus.
+
+164. FDA_get_pregnancy_effects_info_by_drug_name
+     FDA_get_pregnancy_effects_info_by_drug_name: Retrieve information about the effects on pregnancy for a specific drug.
+
+165. FDA_get_drug_name_by_pregnancy_or_breastfeeding_info
+     FDA_get_drug_name_by_pregnancy_or_breastfeeding_info: Retrieve the drug names based on pregnancy or breastfeeding information.
+
+166. FDA_get_pregnancy_or_breastfeeding_info_by_drug_name
+     FDA_get_pregnancy_or_breastfeeding_info_by_drug_name: Retrieve the pregnancy or breastfeeding information based on the specified drug name.
+
+167. FDA_get_contact_for_questions_info_by_drug_name
+     FDA_get_contact_for_questions_info_by_drug_name: Retrieve information on who to contact with questions about the drug based on the provided drug name.
+
+168. FDA_get_recent_changes_by_drug_name
+     FDA_get_recent_changes_by_drug_name: Retrieve recent major changes in labeling for a specific drug.
+
+169. FDA_get_drug_name_by_reference
+     FDA_get_drug_name_by_reference: Retrieve the drug name based on the reference information provided in the drug labeling.
+
+170. FDA_get_reference_info_by_drug_name
+     FDA_get_reference_info_by_drug_name: Retrieve reference information based on the drug name provided.
+
+171. FDA_get_drug_names_by_residue_warning
+     FDA_get_drug_names_by_residue_warning: Retrieve drug names based on the presence of residue warnings.
+
+172. FDA_get_residue_warning_by_drug_name
+     FDA_get_residue_warning_by_drug_name: Retrieve the residue warning based on drug name.
+
+173. FDA_get_drug_names_by_risk
+     FDA_get_drug_names_by_risk: Retrieve drug names based on specific risk information, especially regarding pregnancy or breastfeeding.
+
+174. FDA_get_risk_info_by_drug_name
+     FDA_get_risk_info_by_drug_name: Retrieve risk information (especially regarding pregnancy or breastfeeding) based on the drug name.
+
+175. FDA_get_drug_names_by_route
+     FDA_get_drug_names_by_route: Retrieve the drug names based on the route of administration.
+
+176. FDA_get_route_info_by_drug_name
+     FDA_get_route_info_by_drug_name: Retrieve the route of administration information based on the drug name.
+
+177. FDA_get_drug_names_by_safe_handling_warning
+     FDA_get_drug_names_by_safe_handling_warning: Retrieve drug names that have specific safe handling warnings.
+
+178. FDA_get_safe_handling_warnings_by_drug_name
+     FDA_get_safe_handling_warnings_by_drug_name: Retrieve safe handling warnings for a specific drug based on its name.
+
+179. FDA_get_drug_name_by_set_id
+     FDA_get_drug_name_by_set_id: Retrieve the drug name based on the Set ID of the labeling.
+
+180. FDA_get_drug_names_by_spl_indexing_data_elements
+     FDA_get_drug_names_by_spl_indexing_data_elements: Retrieve drug names based on Structured Product Labeling (SPL) indexing data elements.
+
+181. FDA_get_spl_indexing_data_elements_by_drug_name
+     FDA_get_spl_indexing_data_elements_by_drug_name: Retrieve Structured Product Labeling (SPL) indexing data elements based on drug names.
+
+182. FDA_get_drug_names_by_medication_guide
+     FDA_get_drug_names_by_medication_guide: Retrieve drug names based on the presence of specific information in the medication guide.
+
+183. FDA_get_medication_guide_info_by_drug_name
+     FDA_get_medication_guide_info_by_drug_name: Retrieve medication guide information based on the drug name.
+
+184. FDA_get_drug_name_from_patient_package_insert
+     FDA_get_drug_name_from_patient_package_insert: Retrieve the drug name based on the information provided in the patient package insert.
+
+185. FDA_get_patient_package_insert_from_drug_name
+     FDA_get_patient_package_insert_from_drug_name: Retrieve the patient package insert information based on the drug name.
+
+186. FDA_get_drug_names_by_ingredient
+     FDA_get_drug_names_by_ingredient: Retrieve drug names based on a specific ingredient present in the drug product.
+
+187. FDA_get_ingredients_by_drug_name
+     FDA_get_ingredients_by_drug_name: Retrieve a list of drug ingredients based on the drug name.
+
+188. FDA_get_spl_unclassified_section_by_drug_name
+     FDA_get_spl_unclassified_section_by_drug_name: Retrieve the SPL unclassified section information based on the drug name.
+
+189. FDA_get_drug_name_by_stop_use_info
+     FDA_get_drug_name_by_stop_use_info: Retrieve the drug name based on the stop use information provided.
+
+190. FDA_get_stop_use_info_by_drug_name
+     FDA_get_stop_use_info_by_drug_name: Retrieve stop use information based on the drug name provided.
+
+191. FDA_get_drug_name_by_storage_and_handling_info
+     FDA_get_drug_name_by_storage_and_handling_info: Retrieve the drug name based on storage and handling information.
+
+192. FDA_get_storage_and_handling_info_by_drug_name
+     FDA_get_storage_and_handling_info_by_drug_name: Retrieve storage and handling information based on the drug name.
+
+193. FDA_get_drug_names_by_safety_summary
+     FDA_get_drug_names_by_safety_summary: Retrieve drug names based on the summary of safety and effectiveness information.
+
+194. FDA_get_safety_summary_by_drug_name
+     FDA_get_safety_summary_by_drug_name: Retrieve a summary of safety and effectiveness information based on the drug name.
+
+195. FDA_get_drug_names_by_teratogenic_effects
+     FDA_get_drug_names_by_teratogenic_effects: Retrieve drug names based on specific teratogenic effects categories.
+
+196. FDA_get_teratogenic_effects_by_drug_name
+     FDA_get_teratogenic_effects_by_drug_name: Retrieve teratogenic effects information based on the drug name.
+
+197. FDA_get_drug_names_by_population_use
+     FDA_get_drug_names_by_population_use: Retrieve drug names based on their use in specific populations, such as pregnant women, nursing mothers, pediatric patients, and geriatric patients.
+
+198. FDA_get_population_use_info_by_drug_name
+     FDA_get_population_use_info_by_drug_name: Retrieve information about the use of a drug in specific populations based on the drug name.
+
+199. FDA_get_user_safety_warning_by_drug_names
+     FDA_get_user_safety_warning_by_drug_names: Retrieve specific user safety warnings based on drug names.
+
+200. FDA_get_drug_names_by_user_safety_warning
+     FDA_get_drug_names_by_user_safety_warning: Retrieve drug names that have specific user safety warnings.
+
+201. FDA_get_drug_name_by_warnings
+     FDA_get_drug_name_by_warnings: Retrieve the drug names based on specific warning information.
+
+202. FDA_get_warnings_by_drug_name
+     FDA_get_warnings_by_drug_name: Retrieve warning information based on the drug name.
+
+203. FDA_get_warnings_and_cautions_by_drug_name
+     FDA_get_warnings_and_cautions_by_drug_name: Retrieve warnings and cautions information for a specific drug based on its name.
+
+204. FDA_get_drug_names_by_warnings_and_cautions
+     FDA_get_drug_names_by_warnings_and_cautions: Retrieve drug names based on specific warnings and cautions information.
+
+205. FDA_get_when_using_info
+     FDA_get_when_using_info: Retrieve information about side effects and substances or activities to avoid while using a specific drug.
+
+206. FDA_get_brand_name_generic_name
+     FDA_get_brand_name_generic_name: Retrieve the brand name and generic name from generic name or brand name of a drug.
+
+207. FDA_get_do_not_use_info_by_drug_name
+     FDA_get_do_not_use_info_by_drug_name: Retrieve information about all contraindications for use based on the drug name.
+
+208. FDA_get_purpose_info_by_drug_name
+     FDA_get_purpose_info_by_drug_name: Retrieve about the drug product’s indications for use based on the drug name.
+
+209. FDA_get_drug_generic_name
+     FDA_get_drug_generic_name: Get the drug’s generic name based on the drug's generic or brand name.
+
+210. Finish
+     Finish: Indicate the end of multi-step reasoning.
+
+211. Tool_RAG
+     Tool_RAG: Retrieve related tools from the toolbox based on the provided description
+
+212. CallAgent
+     CallAgent: Give a solution plan to the agent and let it solve the problem. Solution plan should reflect a distinct method, approach, or viewpoint to solve the given question. Call these function multiple times, and each solution plan should start with different aspects of the question, for example, genes, phenotypes, diseases, or drugs, etc. The CallAgent will achieve the task based on the plan, so only give the plan instead of unverified information.
+
+213. get_joint_associated_diseases_by_HPO_ID_list
+     get_joint_associated_diseases_by_HPO_ID_list: Retrieve diseases associated with a list of phenotypes or symptoms by a list of HPO IDs.
+
+214. get_phenotype_by_HPO_ID
+     get_phenotype_by_HPO_ID: Retrieve a phenotype or symptom by its HPO ID.
+
+215. get_HPO_ID_by_phenotype
+     get_HPO_ID_by_phenotype: Retrieve the HPO ID of a phenotype or symptom.

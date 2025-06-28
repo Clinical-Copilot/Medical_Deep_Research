@@ -26,7 +26,7 @@ from src.server.chat_request import (
     GeneratePodcastRequest,
     GeneratePPTRequest,
     GenerateProseRequest,
-    )
+)
 from src.server.mcp_request import MCPServerMetadataRequest, MCPServerMetadataResponse
 from src.server.mcp_utils import load_mcp_tools
 from src.workflow import run_agent_workflow_async
@@ -50,12 +50,15 @@ app.add_middleware(
 
 graph = build_graph_with_memory()
 
+
 class ChatRequest(BaseModel):
     query: str
+
 
 class ChatResponse(BaseModel):
     plan: Optional[Dict[str, Any]] = None
     report: Optional[str] = None
+
 
 @app.post("/api/chat")
 async def chat(request: ChatRequest):
@@ -82,6 +85,7 @@ async def chat(request: ChatRequest):
         async def error_generator():
             yield f"data: {json.dumps(error_event, ensure_ascii=False)}\n\n"
         return StreamingResponse(error_generator(), media_type="text/event-stream")
+
 
 @app.post("/api/chat/stream")
 async def chat_stream(request: ChatRequest):
@@ -201,7 +205,6 @@ def _make_event(event_type: str, data: dict[str, any]):
     if data.get("content") == "":
         data.pop("content")
     return f"event: {event_type}\ndata: {json.dumps(data, ensure_ascii=False)}\n\n"
-
 
 
 @app.post("/api/podcast/generate")
