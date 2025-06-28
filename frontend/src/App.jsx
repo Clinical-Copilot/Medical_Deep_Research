@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import './styles/App.css';
 
 function App() {
@@ -21,8 +22,34 @@ function App() {
   }, [messages, currentStep]);
 
   const renderMarkdown = (text) => {
+    // Preprocess the text to ensure proper table formatting
+    let processedText = text
+      .replace(/\\n/g, '\n')  // Convert literal \n to actual newlines
+      .trim();
+
+    // Better table processing - ensure proper spacing around tables
+    const tableRegex = /(\|.*\|)\n(\|[-\s|]+\|)\n((?:\|.*\|\n?)*)/g;
+    processedText = processedText.replace(tableRegex, (match, header, separator, rows) => {
+      // Ensure proper table formatting with newlines
+      const cleanHeader = header.trim();
+      const cleanSeparator = separator.trim();
+      const cleanRows = rows.trim();
+      
+      return `\n${cleanHeader}\n${cleanSeparator}\n${cleanRows}\n`;
+    });
+
+    // Final cleanup
+    processedText = processedText.replace(/\n{3,}/g, '\n\n');
+
+    // Debug: Log if text contains tables
+    if (text.includes('|') && text.includes('---')) {
+      console.log('[MARKDOWN TABLE] Original:', text.substring(0, 300));
+      console.log('[MARKDOWN TABLE] Processed:', processedText.substring(0, 300));
+    }
+
     return (
       <ReactMarkdown
+        remarkPlugins={[remarkGfm]}  // Enable GitHub Flavored Markdown for tables
         components={{
           // Custom styling for different elements
           h1: ({children}) => <h1 className="markdown-h1">{children}</h1>,
@@ -47,7 +74,7 @@ function App() {
           td: ({children}) => <td className="markdown-td">{children}</td>,
         }}
       >
-        {text}
+        {processedText}
       </ReactMarkdown>
     );
   };

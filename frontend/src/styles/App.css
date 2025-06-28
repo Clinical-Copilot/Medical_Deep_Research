@@ -300,6 +300,16 @@ body {
   border: 1px solid var(--border-color);
   border-radius: 0.5rem;
   overflow: hidden;
+  font-size: 0.9rem;
+}
+
+/* Wrapper for table horizontal scrolling */
+.markdown-content {
+  overflow-x: auto;
+}
+
+.markdown-content table {
+  min-width: 500px; /* Ensure table doesn't get too cramped */
 }
 
 .markdown-thead {
@@ -607,5 +617,11 @@ body {
   .markdown-th,
   .markdown-td {
     padding: 0.5rem;
+    font-size: 0.8rem;
+  }
+  
+  .markdown-content table {
+    min-width: 300px; /* Smaller minimum on mobile */
+    font-size: 0.8rem;
   }
 }
