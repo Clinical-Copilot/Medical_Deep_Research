@@ -16,3 +16,4 @@ class State(TypedDict):
     plan_iterations: int
     auto_accepted_plan: bool
     observations: List[str]
+    final_report: str

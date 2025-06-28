@@ -384,6 +384,8 @@ async def coder_node(
 
 def reporter_node(state: State, config: RunnableConfig = None):
     """Reporter node that write a final report."""
+    logger.info("=== REPORTER NODE STARTING ===")
+    logger.info(f"Reporter node called with state keys: {list(state.keys())}")
     logger.info("Reporter write final report")
     current_plan = state.get("current_plan")
     
@@ -433,7 +435,17 @@ def reporter_node(state: State, config: RunnableConfig = None):
     response_content = response.content
     logger.info(f"reporter response: {response_content}")
     
-    return {"final_report": response_content}
+    result = {"final_report": response_content}
+    logger.info(f"[reporter_node] Created result dict: {result}")
+    logger.info(f"[reporter_node] About to return Command with update={result}")
+    
+    command_result = Command(
+        update=result,
+        goto="__end__"
+    )
+    logger.info(f"[reporter_node] Created Command object: {command_result}")
+    logger.info("=== REPORTER NODE ENDING ===")
+    return command_result
 
 def node(func: Callable) -> Callable:
     """Decorator to create a node.

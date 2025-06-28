@@ -93,6 +93,7 @@ function App() {
             const jsonStr = line.slice(6);
             try {
               const parsed = JSON.parse(jsonStr);
+              console.log('[STREAM] Received event:', parsed);
               const { type, content, step_title } = parsed;
 
               if (type === 'plan' && content) {

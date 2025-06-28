@@ -57,24 +57,31 @@ class ChatResponse(BaseModel):
     plan: Optional[Dict[str, Any]] = None
     report: Optional[str] = None
 
-@app.post("/api/chat", response_model=ChatResponse)
+@app.post("/api/chat")
 async def chat(request: ChatRequest):
     try:
-        # Run the workflow
-        result = await run_agent_workflow_async(
-            user_input=request.query,
-            debug=True,
-            max_plan_iterations=1,
-            max_step_num=3
+        async def event_generator():
+            logger.info(f"[API] Starting event generator for query: {request.query}")
+            async for event in run_agent_workflow_async(
+                user_input=request.query,
+                debug=True,
+                max_plan_iterations=1,
+                max_step_num=3
+            ):
+                logger.info(f"[API] Received event from workflow: {event}")
+                event_data = f"data: {json.dumps(event, ensure_ascii=False)}\n\n"
+                logger.info(f"[API] Yielding SSE data: {event_data.strip()}")
+                yield event_data
+        
+        return StreamingResponse(
+            event_generator(),
+            media_type="text/event-stream"
         )
-        
-        # Extract plan and report from the result
-        plan = result.get("current_plan")
-        report = result.get("final_report")
-        
-        return ChatResponse(plan=plan, report=report)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        error_event = {"type": "error", "content": str(e)}
+        async def error_generator():
+            yield f"data: {json.dumps(error_event, ensure_ascii=False)}\n\n"
+        return StreamingResponse(error_generator(), media_type="text/event-stream")
 
 @app.post("/api/chat/stream")
 async def chat_stream(request: ChatRequest):
@@ -130,7 +137,7 @@ async def _astream_workflow_generator(
             "max_plan_iterations": max_plan_iterations,
             "max_step_num": max_step_num,
             "max_search_results": max_search_results,
-            "mcp_settin  gs": mcp_settings,
+            "mcp_settings": mcp_settings,
         },
         stream_mode=["messages", "updates"],
         subgraphs=True,

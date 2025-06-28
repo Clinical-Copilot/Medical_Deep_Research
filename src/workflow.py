@@ -120,8 +120,10 @@ async def run_agent_workflow_async(
         "auto_accepted_plan": True,
         "plan_iterations": 0,
         "current_plan": None,
-        "observations": []
+        "observations": [],
+        "final_report": ""
     }
+    logger.info(f"[workflow] Created initial state with keys: {list(initial_state.keys())}")
 
     config = {
         "configurable": {
@@ -149,8 +151,10 @@ async def run_agent_workflow_async(
     yielded_steps = set()
 
     try:
+        logger.info("=== WORKFLOW STARTING ===")
         async for s in graph.astream(input=initial_state, config=config, stream_mode="values"):
             try:
+                logger.info(f"=== NEW STATE UPDATE RECEIVED ===")
                 # Check for any tool events first
                 while not tool_events_queue.empty():
                     try:
@@ -161,6 +165,7 @@ async def run_agent_workflow_async(
                         break
                 
                 logger.info(f"[workflow] Processing state update: messages count = {len(s.get('messages', []))}")
+                logger.info(f"[workflow] State keys in this update: {list(s.keys()) if isinstance(s, dict) else 'Not a dict'}")
                 if isinstance(s, dict) and "messages" in s:
                     if len(s["messages"]) > last_message_cnt:
                         new_msgs = s["messages"][last_message_cnt:]
@@ -212,12 +217,37 @@ async def run_agent_workflow_async(
                                 }
                                 yielded_steps.add(step_title)
 
+                # Check for final report
+                logger.info(f"[workflow] Checking for final_report in state...")
+                if isinstance(s, dict):
+                    logger.info(f"[workflow] State is dict with keys: {list(s.keys())}")
+                    if "final_report" in s:
+                        logger.info(f"[workflow] final_report key exists! Value: {s['final_report']}")
+                        if s["final_report"]:
+                            logger.info(f"[workflow] final_report has content: {s['final_report'][:100]}...")
+                            final_report_event = {
+                                "type": "final_report",
+                                "content": s["final_report"]
+                            }
+                            logger.info(f"[workflow] About to yield final_report event: {final_report_event}")
+                            yield final_report_event
+                            logger.info(f"[workflow] Successfully yielded final_report event")
+                        else:
+                            logger.info(f"[workflow] final_report exists but is empty/falsy")
+                    else:
+                        logger.info(f"[workflow] final_report key NOT found in state")
+                else:
+                    logger.info(f"[workflow] State is not a dict, type: {type(s)}")
+
             except Exception as e:
                 logger.exception("[workflow] Exception in stream loop")
                 yield {"type": "error", "content": str(e)}
         
         # Log that stream has ended
+        logger.info(f"=== WORKFLOW STREAM ENDED ===")
         logger.info(f"[workflow] Stream ended. Total messages yielded: {last_message_cnt}")
+        logger.info(f"[workflow] Final yielded_steps: {yielded_steps}")
+        logger.info(f"[workflow] Current plan yielded: {current_plan_yielded}")
 
     except Exception as e:
         logger.error(f"[workflow] Workflow error: {str(e)}")
