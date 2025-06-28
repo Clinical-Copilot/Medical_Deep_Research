@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
 import './styles/App.css';
 
 function App() {
@@ -19,30 +20,51 @@ function App() {
     scrollToBottom();
   }, [messages, currentStep]);
 
-  const cleanMarkdown = (text) => {
-    return text
-      .replace(/^#{1,6}\s*/gm, '')
-      .replace(/^\s*[-*]\s*/gm, '')
-      .replace(/\*\*(.*?)\*\*/g, '$1')
-      .replace(/\*(.*?)\*/g, '$1')
-      .replace(/^\*\[(.*?)\]\*\*/gm, '[$1]')
-      .replace(/(\[[^\]]+\])\*/g, '$1')
-      .replace(/\n{3,}/g, '\n\n');
+  const renderMarkdown = (text) => {
+    return (
+      <ReactMarkdown
+        components={{
+          // Custom styling for different elements
+          h1: ({children}) => <h1 className="markdown-h1">{children}</h1>,
+          h2: ({children}) => <h2 className="markdown-h2">{children}</h2>,
+          h3: ({children}) => <h3 className="markdown-h3">{children}</h3>,
+          h4: ({children}) => <h4 className="markdown-h4">{children}</h4>,
+          p: ({children}) => <p className="markdown-p">{children}</p>,
+          ul: ({children}) => <ul className="markdown-ul">{children}</ul>,
+          ol: ({children}) => <ol className="markdown-ol">{children}</ol>,
+          li: ({children}) => <li className="markdown-li">{children}</li>,
+          strong: ({children}) => <strong className="markdown-strong">{children}</strong>,
+          em: ({children}) => <em className="markdown-em">{children}</em>,
+          code: ({children}) => <code className="markdown-code">{children}</code>,
+          pre: ({children}) => <pre className="markdown-pre">{children}</pre>,
+          blockquote: ({children}) => <blockquote className="markdown-blockquote">{children}</blockquote>,
+          a: ({href, children}) => <a href={href} className="markdown-link" target="_blank" rel="noopener noreferrer">{children}</a>,
+          table: ({children}) => <table className="markdown-table">{children}</table>,
+          thead: ({children}) => <thead className="markdown-thead">{children}</thead>,
+          tbody: ({children}) => <tbody className="markdown-tbody">{children}</tbody>,
+          tr: ({children}) => <tr className="markdown-tr">{children}</tr>,
+          th: ({children}) => <th className="markdown-th">{children}</th>,
+          td: ({children}) => <td className="markdown-td">{children}</td>,
+        }}
+      >
+        {text}
+      </ReactMarkdown>
+    );
   };
 
   const formatPlanText = (planObj) => {
     if (typeof planObj === 'string') return planObj;
     if (planObj.error) return null;
 
-    let text = `Research Plan:\n\n`;
-    if (planObj.title) text += `Title: ${planObj.title}\n\n`;
-    if (planObj.thought) text += `Approach: ${planObj.thought}\n\n`;
+    let text = `# Research Plan\n\n`;
+    if (planObj.title) text += `**Title:** ${planObj.title}\n\n`;
+    if (planObj.thought) text += `**Approach:** ${planObj.thought}\n\n`;
     if (Array.isArray(planObj.steps)) {
-      text += `Steps:\n`;
+      text += `## Steps:\n\n`;
       planObj.steps.forEach((step, i) => {
-        text += `${i + 1}. ${step.title}\n`;
+        text += `### ${i + 1}. ${step.title}\n`;
         if (step.description) {
-          text += `   ${step.description}\n`;
+          text += `${step.description}\n\n`;
         }
       });
     }
@@ -306,7 +328,7 @@ function App() {
         </div>
         <div className="message-content">
           {isMarkdownContent ? (
-            <pre className="formatted-content">{cleanMarkdown(message.content)}</pre>
+            <div className="markdown-content">{renderMarkdown(message.content)}</div>
           ) : (
             <div className="regular-content">{message.content}</div>
           )}
