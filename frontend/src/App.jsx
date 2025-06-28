@@ -183,7 +183,7 @@ function App() {
                     }, 15000);
                   }
                 } else {
-                  setCurrentStep('');
+                  setCurrentStep('Generating final report...');
                 }
               } else if (
                 type === 'message' &&
@@ -196,6 +196,8 @@ function App() {
                   name: content.name || 'system'
                 }]);
               } else if (type === 'final_report' && content) {
+                console.log('[FINAL REPORT]', content);
+                setCurrentStep('Final report completed!');
                 setMessages(prev => [...prev, {
                   type: 'conclusion',
                   content,
