@@ -101,6 +101,16 @@ class AutoMCPOrchestrator:
                     continue
                 # Use the first server in the config (extend if multiple supported)
                 server_name, server_cfg = next(iter(mcp_servers.items()))
+                
+                # Add Docker support to the config
+                server_cfg["use_docker"] = True
+                server_cfg["repo_url"] = url
+                server_cfg["markdown_content"] = candidate.markdown_content
+                
+                # Store original args for Docker conversion
+                if "args" in server_cfg:
+                    server_cfg["original_args"] = server_cfg["args"].copy()
+                
                 # Inject user requirements (e.g., required tools)
                 if "enabled_tools" in self.user_requirements:
                     server_cfg["enabled_tools"] = self.user_requirements["enabled_tools"]

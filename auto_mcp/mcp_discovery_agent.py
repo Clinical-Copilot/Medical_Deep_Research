@@ -11,7 +11,6 @@ from src.llms.llm import get_llm_by_type
 
 logger = logging.getLogger(__name__)
 
-# This is casually done, need to improve
 class MCPDiscoveryAgent:
     """Agent responsible for discovering MCP servers using search tools."""
     
