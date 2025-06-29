@@ -208,6 +208,7 @@ python3 /Users/liyuan/Desktop/projects/meddr/tests/test_researcher.py
   - Expand capabilities for private domain access
   - Knowledge graph integration
   - Web browsing capabilities
+  - Auto-discovery and validation of MCP servers
 
 ### Human Collaboration
 
