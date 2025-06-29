@@ -1,0 +1,14 @@
+{
+  "mcp_servers": {
+    "biomcp": {
+      "transport": "stdio",
+      "command": "uv",
+      "args": ["run", "--with", "biomcp-python", "biomcp", "run"],
+      "enabled_tools": [
+        "search",
+        "fetch"
+      ],
+      "add_to_agents": ["researcher"]
+    }
+  }
+} 

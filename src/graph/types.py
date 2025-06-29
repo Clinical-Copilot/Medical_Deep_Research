@@ -15,6 +15,6 @@ class State(TypedDict):
     messages: List[Dict[str, Any]]
     current_plan: Optional[Plan]
     plan_iterations: int
-    auto_accepted_plan: bool
+    human_feedback: bool
     observations: List[str]
     final_report: str

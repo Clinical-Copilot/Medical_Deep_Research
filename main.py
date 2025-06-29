@@ -20,6 +20,7 @@ def ask(
     max_plan_iterations=1,
     max_step_num=3,
     output_format="long-report",
+    human_feedback=False,
 ):
     """Run the agent workflow with the given question.
 
@@ -28,7 +29,8 @@ def ask(
         debug: If True, enables debug level logging
         max_plan_iterations: Maximum number of plan iterations
         max_step_num: Maximum number of steps in a plan
-        output_format: Output format - "long-report" or "short-report" (default: "long-report")
+        output_format: Output format - "long-report", "short-report", or custom requirements (default: "long-report")
+        human_feedback: Whether to require human feedback on plans (default: False for auto-accept)
     """
     asyncio.run(
         run_agent_workflow_async(
@@ -37,12 +39,13 @@ def ask(
             max_plan_iterations=max_plan_iterations,
             max_step_num=max_step_num,
             output_format=output_format,
+            human_feedback=human_feedback,
         )
     )
 
 
 def main(
-    debug=False, max_plan_iterations=1, max_step_num=3, output_format="long-report"
+    debug=False, max_plan_iterations=1, max_step_num=3, output_format="long-report", human_feedback=False
 ):
     """Interactive mode with built-in questions.
 
@@ -50,7 +53,8 @@ def main(
         debug: If True, enables debug level logging
         max_plan_iterations: Maximum number of plan iterations
         max_step_num: Maximum number of steps in a plan
-        output_format: Output format - "long-report" or "short-report" (default: "long-report")
+        output_format: Output format - "long-report", "short-report", or custom requirements (default: "long-report")
+        human_feedback: Whether to require human feedback on plans (default: False for auto-accept)
     """
     # Choose questions
     questions = BUILT_IN_QUESTIONS
@@ -74,6 +78,7 @@ def main(
         max_plan_iterations=max_plan_iterations,
         max_step_num=max_step_num,
         output_format=output_format,
+        human_feedback=human_feedback,
     )
 
 
@@ -102,7 +107,12 @@ if __name__ == "__main__":
         "--output_format",
         type=str,
         default="long-report",
-        help="Output format - 'long-report' or 'short-report' (default: 'long-report')",
+        help="Output format - 'long-report', 'short-report', or custom requirements (e.g., 'focus on technical details, include code examples')",
+    )
+    parser.add_argument(
+        "--human_feedback",
+        action="store_true",
+        help="Require human feedback on plans (default: False - auto-accept plans)",
     )
 
     args = parser.parse_args()
@@ -114,6 +124,7 @@ if __name__ == "__main__":
             max_plan_iterations=args.max_plan_iterations,
             max_step_num=args.max_step_num,
             output_format=args.output_format,
+            human_feedback=args.human_feedback,
         )
     else:
         # Parse user input from command line arguments or user input
@@ -129,4 +140,5 @@ if __name__ == "__main__":
             max_plan_iterations=args.max_plan_iterations,
             max_step_num=args.max_step_num,
             output_format=args.output_format,
+            human_feedback=args.human_feedback,
         )

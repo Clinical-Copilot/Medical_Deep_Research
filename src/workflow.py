@@ -1,4 +1,5 @@
 import asyncio
+import json
 import logging
 import os
 from pathlib import Path
@@ -34,6 +35,26 @@ for logger_name in ["src", "src.graph", "src.graph.nodes", "src.graph.dev_mode"]
 
 logger = logging.getLogger(__name__)
 graph = build_graph()
+
+
+def load_mcp_config():
+    """Load MCP configuration from JSON file."""
+    try:
+        config_path = Path("mcp_config.json")
+        if config_path.exists():
+            with open(config_path, "r") as f:
+                config = json.load(f)
+                mcp_servers = config.get("mcp_servers", {})
+                logger.info(f"Loaded MCP servers: {list(mcp_servers.keys())}")
+                for server_name, server_config in mcp_servers.items():
+                    logger.info(f"Server '{server_name}' config: {server_config}")
+                return mcp_servers
+        else:
+            logger.warning("mcp_config.json not found, using default MCP settings")
+            return {}
+    except Exception as e:
+        logger.error(f"Error loading MCP config: {e}")
+        return {}
 
 
 def serialize_message(message):
@@ -102,6 +123,7 @@ async def run_agent_workflow_async(
     max_plan_iterations: int = 1,
     max_step_num: int = 2,  # Reduced to prevent deep recursion
     output_format: str = "long-report",
+    human_feedback: bool = False,  # Whether to require human feedback (default: False for auto-accept)
 ):
     if not user_input:
         raise ValueError("Input could not be empty")
@@ -120,7 +142,7 @@ async def run_agent_workflow_async(
     
     initial_state = {
         "messages": [{"role": "user", "content": user_input}],
-        "auto_accepted_plan": True,  # Auto-accept plans to reduce recursion
+        "human_feedback": human_feedback,  # False = auto-accept plans, True = require human feedback
         "plan_iterations": 0,  # Track plan iterations
         "current_plan": None,  # Initialize plan
         "observations": [],  # Track observations
@@ -135,17 +157,10 @@ async def run_agent_workflow_async(
             "max_step_num": max_step_num,
             "output_format": output_format,
             "mcp_settings": {
-                "servers": {
-                    "mcp-github-trending": {
-                        "transport": "stdio",
-                        "command": "uvx",
-                        "args": ["mcp-github-trending"],
-                        "enabled_tools": ["get_github_trending_repositories"],
-                        "add_to_agents": ["researcher"],
-                    }
-                }
+                "servers": mcp_servers
             },
         },
+        "recursion_limit": 20,
         "recursion_limit": 20,
     }
 

@@ -77,3 +77,4 @@ CLAUDE.md
 
 coverage/meddr_env/
 meddr_env/
+uv.lock

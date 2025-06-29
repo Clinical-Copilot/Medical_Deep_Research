@@ -41,8 +41,8 @@ class ChatRequest(BaseModel):
     max_search_results: Optional[int] = Field(
         3, description="The maximum number of search results"
     )
-    auto_accepted_plan: Optional[bool] = Field(
-        False, description="Whether to automatically accept the plan"
+    human_feedback: Optional[bool] = Field(
+        False, description="Whether to require human feedback on plans (False = auto-accept, True = require feedback)"
     )
     interrupt_feedback: Optional[str] = Field(
         None, description="Interrupt feedback from the user on the plan"

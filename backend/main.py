@@ -38,6 +38,9 @@ class ChatRequest(BaseModel):
     max_step_num: int = Field(
         default=3, description="Maximum number of steps in a plan"
     )
+    human_feedback: bool = Field(
+        default=False, description="Whether to require human feedback on plans (default: False for auto-accept)"
+    )
 
 @app.post("/api/chat")
 async def chat(request: ChatRequest):
