@@ -12,7 +12,7 @@ import json
 # Add the root directory to Python path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.workflow import run_agent_workflow_async  # <-- must be updated to async generator
+from src.workflow import run_agent_workflow_async 
 
 # Load environment variables
 load_dotenv()
