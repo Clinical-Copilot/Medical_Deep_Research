@@ -119,11 +119,9 @@ def planner_node(
         else:
             return Command(goto="__end__")
     
-    # Always create Plan object for consistency
-    new_plan = Plan.model_validate(curr_plan)
-    
-    if new_plan.has_enough_context:
+    if curr_plan.get("has_enough_context"):
         logger.info("Planner response has enough context.")
+        new_plan = Plan.model_validate(curr_plan)
         return Command(
             update={
                 "messages": [AIMessage(content=full_response, name="planner")],
@@ -134,7 +132,7 @@ def planner_node(
     return Command(
         update={
             "messages": [AIMessage(content=full_response, name="planner")],
-            "current_plan": new_plan,
+            "current_plan": full_response,
         },
         goto="feedback_node",
     )
@@ -284,20 +282,12 @@ def human_feedback_node(
     plan_iterations = state["plan_iterations"] if state.get("plan_iterations", 0) else 0
     goto = "research_team"
     try:
-        # Check if current_plan is already a Plan object
-        if hasattr(current_plan, 'has_enough_context'):
-            # It's already a Plan object, use it directly
-            new_plan = current_plan
-        else:
-            # It's a string, process it as before
-            current_plan = repair_json_output(current_plan)
-            # increment the plan iterations
-            plan_iterations += 1
-            # parse the plan
-            new_plan = json.loads(current_plan)
-            new_plan = Plan.model_validate(new_plan)
-        
-        if new_plan.has_enough_context:
+        current_plan = repair_json_output(current_plan)
+        # increment the plan iterations
+        plan_iterations += 1
+        # parse the plan
+        new_plan = json.loads(current_plan)
+        if new_plan["has_enough_context"]:
             goto = "reporter"
     except json.JSONDecodeError:
         logger.warning("Planner response is not a valid JSON")
@@ -308,7 +298,7 @@ def human_feedback_node(
 
     return Command(
         update={
-            "current_plan": new_plan,
+            "current_plan": Plan.model_validate(new_plan),
             "plan_iterations": plan_iterations,
         },
         goto=goto,
@@ -317,7 +307,7 @@ def human_feedback_node(
 
 def research_team_node(
     state: State,
-) -> Command[Literal["planner", "researcher", "coder"]]:
+) -> Command[Literal["planner", "researcher", "coder", "reporter"]]:
     """Research team node that collaborates on tasks."""
     logger.info("Research team is collaborating on tasks.")
     current_plan = state.get("current_plan")

@@ -52,7 +52,8 @@ async def chat(request: ChatRequest):
                 user_input=request.query,
                 debug=False,
                 max_plan_iterations=request.max_plan_iterations,
-                max_step_num=request.max_step_num
+                max_step_num=request.max_step_num,
+                human_feedback=request.human_feedback
             ):
                 print(f"[BACKEND] Yielding result: {result}")
                 yield f"data: {json.dumps(result)}\n\n"
