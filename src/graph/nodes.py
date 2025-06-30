@@ -481,7 +481,11 @@ async def _setup_and_execute_agent_step(
                 )
                 loaded_tools.append(tool)
         agent = create_agent(agent_type, agent_type, loaded_tools, agent_type)
-        return await _execute_agent_step(state, agent, agent_type)
+    else:
+        # Fallback: create agent with default tools when no MCP servers configured
+        agent = create_agent(agent_type, agent_type, default_tools, agent_type)
+    
+    return await _execute_agent_step(state, agent, agent_type)
 
 
 async def researcher_node(
@@ -490,8 +494,7 @@ async def researcher_node(
     """Researcher node that do research"""
     logger.info("Researcher node is researching.")
     configurable = Configuration.from_runnable_config(config)
-    research_tools = []
-    # research_tools = [openai_search_tool, litesense_tool, crawl_tool]
+    research_tools = [openai_search_tool, litesense_tool, crawl_tool]
     # [get_boxed_warning_info_by_drug_name]
     return await _setup_and_execute_agent_step(
         state,

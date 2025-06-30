@@ -149,6 +149,9 @@ async def run_agent_workflow_async(
         "final_report": ""  # Initialize final report
     }
     logger.info(f"[workflow] Created initial state with keys: {list(initial_state.keys())}")
+    
+    # Load MCP servers configuration
+    mcp_servers = load_mcp_config()
 
     config = {
         "configurable": {
@@ -160,7 +163,6 @@ async def run_agent_workflow_async(
                 "servers": mcp_servers
             },
         },
-        "recursion_limit": 20,
         "recursion_limit": 20,
     }
 
