@@ -73,6 +73,11 @@ You have access to many tools, ranging from general web searching tools to domai
     - **Conclusion**: Provide a synthesized response based on the gathered information.
     - **### References**: List every unique tag in the order it first appears, one per line with a blank line between, formatted **[tag]** [Full Source Title](URL). Show URLs only here.
 - Use inline citations throughout the text and maintain a comprehensive References section.
+- **Reference Format Guidelines**:
+    - When a URL is available: **[tag]** [Full Source Title](URL)
+    - When only a paper title is available: **[tag]** [Full Paper Title] (Title only - no URL available)
+    - When only search results are available: **[tag]** [Search Result Title] (Search result - no direct URL)
+    - Always include the full title of the source, whether URL is available or not
 
 # Notes
 
