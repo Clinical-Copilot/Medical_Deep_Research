@@ -1,238 +1,134 @@
-# MedDR
+# Medical Deep Research (MedDR)
 
 [![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-[English](./README.md)
+<p align="center">
+  <img src="./assets/main.png" alt="Medical Deep Research Teaser" width="80%"/>
+</p>
 
-> Originated from Open Source, give back to Open Source.
+<p align="center"><b>Figure:</b> Medical Deep Research – Multi-agent, resource-rich system for clinical and biomedical inquiry.</p>
 
-**MedDR** (**M**edical **D**eep **R**esearch) is a Deep Research for medical domain. It builds upon the incredible work of the open source community. Our goal is to combine language models with specialized tools for tasks like web search, crawling, and Python code execution.
+> **Medical Deep Research** - An open-source, agentic system for comprehensive medical and clinical investigations
 
-## Project Logic and Structure
+## Overview
 
-The project follows a modular, graph-based architecture for deep research tasks. Here's how it works:
+Medical Deep Research represents the convergence of large language models (LLMs), advanced reasoning, and information retrieval for expert-level medical inquiry. Our system addresses the limitations of existing Deep Research platforms by providing:
 
-### 1. Entry Point (`main.py`)
-- The main entry point that handles user input and initializes the workflow
-- Sets up logging and configuration
-- Manages the execution of the research workflow
+- **Reliability in high-stakes domains**: Access to full-text articles and specialized medical repositories
+- **Dynamic integration of specialized resources**: Model Context Protocol (MCP) support with automatic discovery and validation
+- **Flexible output formats**: Customizable reports tailored to specific clinical needs
 
-### 2. Workflow Management (`src/workflow.py`)
-- Defines the high-level workflow structure
-- Manages the execution flow between different components
-- Handles logging and error management
-- Coordinates between different agents and tools
+## Core Architecture
 
-### 3. Graph Structure
-The system uses a directed graph where:
-- Nodes represent different agents (Coordinator, Planner, Researcher, Coder)
-- Edges define the flow of information and control
-- State is passed between nodes to maintain context
-- Each node can access specific tools based on its role
+### Research Module
+Built on a multi-agent framework using LangGraph, featuring specialized agents:
 
-### 4. Node Level
-MedDR implements a modular multi-agent system architecture designed for automated research and code analysis. The system is built on LangGraph, enabling a flexible state-based workflow where components communicate through a well-defined message passing system.
+- **Coordinator**: Entry point that manages workflow lifecycle and delegates tasks to appropriate agents
+- **Planner**: Strategic task decomposition and planning with configurable research depth (low/medium/high)
+- **Plan Modifier**: Incorporates human feedback to refine research plans iteratively
+- **Orchestrator**: Coordinates execution phase by managing specialized agents and routing tasks between Researcher and Coder
+- **Researcher**: Information gathering using medical tools, MCPs, and specialized databases
+- **Coder**: Data analysis, calculations, and code execution using Python REPL
+- **Reporter**: Customizable report generation with multiple output formats (long report, short summary, custom)
 
-![Architecture Diagram](./assets/architecture.png)
+### Resource Module
+Two complementary resource pillars:
 
-The system employs a streamlined workflow with the following components:
+1. **Built-in Resources**: Curated catalog of 10+ pre-integrated tools including:
+   - Literature databases (PubMed, PMC, LitSense 2.0)
+   - Clinical trial registries (ClinicalTrials.gov)
+   - Drug databases (DrugBank, OpenFDA, ToolUniverse)
+   - Pharmacovigilance repositories
+   - Web search and crawling capabilities
 
-1. **Coordinator**: The entry point that manages the workflow lifecycle
+2. **Dynamic MCP Integration Pipeline**: 
+   - **MCP Discovery Agent**: Automatically finds medical MCP servers from search engines and GitHub
+   - **MCP Config Generator**: Parses documentation and generates standardized configuration files
+   - **MCP Validator**: Docker-based sandbox testing with iterative refinement for reliability
 
-   - Initiates the research process based on user input
-   - Delegates tasks to the planner when appropriate
-   - Acts as the primary interface between the user and the system
+### Key Components
 
-2. **Planner**: Strategic component for task decomposition and planning
+- **Query Processor**: Intelligent query transformation with strategies (DIRECT, PARAPHRASE, EXPAND) for optimal tool usage
+- **ReAct Framework**: Enhanced reasoning capabilities for intelligent resource selection and decision-making
+- **Human-in-the-Loop**: Interactive plan modification and feedback integration
+- **Flexible Output System**: Dynamic prompt generation for customized report formats and styles
 
-   - Analyzes research objectives and creates structured execution plans
-   - Determines if enough context is available or if more research is needed
-   - Manages the research flow and decides when to generate the final report
+## Key Features
 
-3. **Research Team**: A collection of specialized agents that execute the plan:
-
-   - **Researcher**: Conducts web searches and information gathering using tools like web search engines, crawling and even MCP services.
-   - **Coder**: Handles code analysis, execution, and technical tasks using Python REPL tool.
-     Each agent has access to specific tools optimized for their role and operates within the LangGraph framework
-
-4. **Reporter**: Final stage processor for research outputs
-   - Aggregates findings from the research team
-   - Processes and structures the collected information
-   - Generates comprehensive research reports
-
-
-## 📑 Table of Contents
-
-- [🚀 Quick Start](#quick-start)
-- [🏗️ Architecture](#architecture)
-- [🛠️ Development](#development)
-- [📚 Examples](#examples)
-- [💖 Acknowledgments](#acknowledgments)
+- **Comprehensive Coverage**: Access to extensive medical resources across literature, clinical trials, and specialized databases
+- **Usability**: User-friendly interface with minimal code requirements
+- **Flexibility**: Plug-and-play architecture for easy extension and customization
+- **Verifiable Sources**: All references are tractable and verifiable
+- **Clinical Accuracy**: Evaluated by board-certified medical specialists
 
 ## Quick Start
 
-MedDR is developed in Python. To ensure a smooth setup process, we recommend using the following tools:
-
-### Environment Requirements
-
-Make sure your system meets the following minimum requirements:
-
-- **[Python](https://www.python.org/downloads/):** Version `3.12+`
+### Prerequisites
+- Python 3.12+
+- OpenAI API key (or other supported LLM providers)
 
 ### Setup
 
-1. Clone the repository
-2. Create and activate a virtual environment:
+#### Backend Setup
 ```bash
+# Clone the repository
+git clone https://github.com/realYuanLi/meddr.git
+cd meddr
+
+# Create virtual environment
 python -m venv meddr_env
-source meddr_env/bin/activate
-```
+source meddr_env/bin/activate  # On Windows: meddr_env\Scripts\activate
 
-3. Install dependencies:
-```bash
+# Install backend dependencies
 pip install -r requirements.txt
-```
 
-4. Configure environment:
-```bash
-# Configure .env with your API keys
-cp .env.example .env
-
-# Configure conf.yaml for your LLM model and API keys
+# Configure environment
 cp conf.yaml.example conf.yaml
+# Edit conf.yaml with your API keys
+
+# Start the backend server
+uvicorn main:app --reload
 ```
 
-## Full Stack Setup
-
-To run both the frontend and backend together, follow these steps:
-
-1. **Backend Setup**
-    Activate your virtual environment
-    ```bash
-    # Make sure you're in the project root directory
-    cd /path/to/meddr/backend
-    ```
-
-    Install backend dependencies
-    ```bash
-    pip install -r requirements.txt
-    ```
-
-    Add `.env` file to the backend folder, and include `OPENAI_API_KEY`.
-
-    Start the backend server
-    ```bash
-    uvicorn main:app --reload
-    ```
-
-2. **Frontend Setup**
-    ```bash
-    # Open a new terminal window
-    cd path/to/meddr/frontend
-
-    # Install frontend dependencies
-    npm install
-
-    # Start the frontend development server
-    npm run dev
-    ```
-
-3. **Access the Application**
-   - Frontend will be available at: `http://localhost:3000`
-
-4. **Environment Configuration**
-   - Make sure both `.env` and `conf.yaml` are properly configured
-   - Frontend environment variables should be set in `.env.local` in the frontend directory
-
-## Development Mode
-
-MedDR includes a development mode that helps track and debug node execution. When enabled, it logs detailed information about each node's inputs, prompts, outputs, and execution results to both the console and log files.
-
-### Enabling Development Mode
-
-To enable development mode, set the `MEDDR_DEV_MODE` environment variable to `true`:
-
+#### Frontend Setup
 ```bash
-export MEDDR_DEV_MODE=true
+# Open a new terminal window
+cd meddr/frontend
+
+# Install frontend dependencies
+npm install
+
+# Start the frontend development server
+npm run dev
 ```
 
-### Running Examples
+#### Access the Application
+- Frontend will be available at: `http://localhost:3000`
+- Make sure both `.env` and `conf.yaml` are properly configured
+- Frontend environment variables should be set in `.env.local` in the frontend directory
 
-```bash
-# Run with a specific query
-python3 main.py "What factors are influencing AI adoption in healthcare?"
+### Usage
 
-# Run with custom planning parameters
-python3 main.py --max_plan_iterations 3 "How does quantum computing impact cryptography?"
+- Access the web interface at `http://localhost:3000`
+- Use the interactive chat interface for medical research queries
+- Configure your API keys in the backend environment
 
-# Run in interactive mode
-python3 main.py --interactive
-```
 
-### Logging
+## Contributing
 
-Logs are written to the `logs` directory:
-- Main log file: `logs/meddr.log`
-- Development mode logs include detailed execution information
-
-> ## 🔔 Your task!
-> I have set a testing file `test_researcher.py`
-> This file includes the **researcher node's core functionality**.
-> - It covers key aspects like **web search, crawling, and information gathering**.
-> - Your task is to integrate tools that are similar to craw_tool, and focus on biomedical sources.
-
-### Run the testing example:
-```
-python3 /Users/liyuan/Desktop/projects/meddr/tests/test_researcher.py
-```
-
-## Features
-
-### Core Capabilities
-
-- 🤖 **LLM Integration**
-  - Supports integration of most models through [litellm](https://docs.litellm.ai/docs/providers)
-  - Support for open source models like Qwen
-  - OpenAI-compatible API interface
-  - Multi-tier LLM system for different task complexities
-
-### Tools and MCP Integrations
-
-- 🔍 **Search and Retrieval**
-  - Web search via Arxiv
-  - Crawling with Jina
-  - Advanced content extraction
-
-- 🔗 **MCP Integration**
-  - Expand capabilities for private domain access
-  - Knowledge graph integration
-  - Web browsing capabilities
-  - Auto-discovery and validation of MCP servers
-
-### Human Collaboration
-
-- 🧠 **Human-in-the-loop**
-  - Interactive modification of research plans
-  - Auto-acceptance of research plans
-  - Natural language interaction
-
-- 📝 **Report Post-Editing**
-  - Notion-like block editing
-  - AI-assisted refinements
-  - Powered by [tiptap](https://tiptap.dev/)
-
+We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
 
 
 ## License
 
-..
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Acknowledgments
 
-MedDR uses code from following GitHub repositories. We are grateful to all the projects and contributors whose efforts have made MedDR possible.
+Medical Deep Research builds upon the incredible work of the open-source community, particularly the LangGraph framework and the Model Context Protocol ecosystem.
 
-### Key Contributors
+---
 
-- [List of key contributors]
+**Impact**: Medical Deep Research is the first open-source, medically oriented Deep Research system, designed to serve as a transparent co-pilot for clinicians, researchers, and healthcare stakeholders.
 
