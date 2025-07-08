@@ -5,5 +5,5 @@
 
 BASIC_MODEL:
   base_url: https://api.openai.com/v1
-  model: "gpt-4o-mini"
+  model: "o1"
   api_key: 

@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import logo from './logo.png';
 import './styles/App.css';
 
 function App() {
@@ -9,12 +10,32 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState('');
   const [activeTools, setActiveTools] = useState(new Map());
+  const [selectedModel, setSelectedModel] = useState('OpenAI o1');
+  const [outputFormat, setOutputFormat] = useState('long_report');
+  const [customFormat, setCustomFormat] = useState('');
+  const [humanFeedback, setHumanFeedback] = useState('no');
+  const [thinkMode, setThinkMode] = useState('medium');
+  const [maxSteps, setMaxSteps] = useState(3);
+  const [openConfig, setOpenConfig] = useState(null);
+  const [collapsedMessages, setCollapsedMessages] = useState(new Set());
   const messagesEndRef = useRef(null);
   const stepCounter = useRef(0);
   const resultTimer = useRef(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const toggleMessageCollapse = (messageIndex) => {
+    setCollapsedMessages(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(messageIndex)) {
+        newSet.delete(messageIndex);
+      } else {
+        newSet.add(messageIndex);
+      }
+      return newSet;
+    });
   };
 
   useEffect(() => {
@@ -109,14 +130,24 @@ function App() {
     setCurrentStep('Creating your research plan...');
 
     try {
+      const requestBody = {
+        query: userMessage,
+        max_plan_iterations: thinkMode === 'high' ? 7 : thinkMode === 'medium' ? 3 : 1,
+        max_step_num: maxSteps,
+        model: selectedModel,
+        output_format: outputFormat,
+        human_feedback: humanFeedback
+      };
+
+      // Add custom format if selected
+      if (outputFormat === 'custom' && customFormat.trim()) {
+        requestBody.custom_format = customFormat.trim();
+      }
+
       const response = await fetch('http://localhost:8000/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          query: userMessage,
-          max_plan_iterations: 1,
-          max_step_num: 3
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       if (!response.ok || !response.body) {
@@ -148,11 +179,16 @@ function App() {
               if (type === 'plan' && content) {
                 const formattedPlan = formatPlanText(content);
                 if (formattedPlan !== null) {
-                  setMessages(prev => [...prev, {
-                    type: 'plan',
-                    content: formattedPlan,
-                    name: 'planner'
-                  }]);
+                  setMessages(prev => {
+                    const newMessages = [...prev, {
+                      type: 'plan',
+                      content: formattedPlan,
+                      name: 'planner'
+                    }];
+                    // Auto-collapse plan messages - use the new length as index
+                    setCollapsedMessages(collapsed => new Set([...collapsed, newMessages.length - 1]));
+                    return newMessages;
+                  });
                 }
                 setCurrentStep('Research plan created. Preparing first step...');
                 stepCounter.current = 1;
@@ -193,18 +229,23 @@ function App() {
                   return newMap;
                 });
               } else if (type === 'execution_res' && content) {
-                setMessages(prev => [...prev, {
-                  type: 'report',
-                  content,
-                  name: step_title || 'step'
-                }]);
+                setMessages(prev => {
+                  const newMessages = [...prev, {
+                    type: 'report',
+                    content,
+                    name: step_title || 'step'
+                  }];
+                  // Auto-collapse report messages - use the new length as index
+                  setCollapsedMessages(collapsed => new Set([...collapsed, newMessages.length - 1]));
+                  return newMessages;
+                });
 
                 stepCounter.current += 1;
-                if (stepCounter.current <= 3) {
+                if (stepCounter.current <= maxSteps) {
                   setCurrentStep(`Preparing step ${stepCounter.current} of the research plan...`);
                   if (resultTimer.current) clearTimeout(resultTimer.current);
-                  // Only allow loading message if stepCounter is still within 3 steps
-                  if (stepCounter.current < 4) {
+                  // Only allow loading message if stepCounter is still within maxSteps
+                  if (stepCounter.current < maxSteps + 1) {
                     resultTimer.current = setTimeout(() => {
                       setCurrentStep(`Generating research result #${stepCounter.current}...`);
                     }, 15000);
@@ -308,7 +349,7 @@ function App() {
     }
   };
 
-  const renderMessage = (message) => {
+  const renderMessage = (message, index) => {
     const getMessageIcon = (type, name) => {
       if (type === 'plan') return '📋';
       if (type === 'report') return '📝';
@@ -327,7 +368,7 @@ function App() {
 
     const getMessageTitle = (type, name) => {
       if (type === 'plan') return 'Research Plan';
-      if (type === 'report') return 'Research Result';
+      if (type === 'report') return 'Intermediary Findings';
       if (type === 'conclusion') return 'Final Report';
       if (type === 'user') return 'You';
       if (type === 'error') return 'Error';
@@ -349,19 +390,32 @@ function App() {
       message.name === 'assistant'
     );
 
+    const isCollapsible = message.type === 'plan' || message.type === 'report';
+    const isCollapsed = collapsedMessages.has(index);
+
     return (
       <div className={`message-bubble ${message.type}`}>
-        <div className="message-header">
+        <div 
+          className={`message-header ${isCollapsible ? 'collapsible' : ''}`}
+          onClick={isCollapsible ? () => toggleMessageCollapse(index) : undefined}
+        >
           <span className="message-icon">{getMessageIcon(message.type, message.name)}</span>
           <span className="message-title">{getMessageTitle(message.type, message.name)}</span>
-        </div>
-        <div className="message-content">
-          {isMarkdownContent ? (
-            <div className="markdown-content">{renderMarkdown(message.content)}</div>
-          ) : (
-            <div className="regular-content">{message.content}</div>
+          {isCollapsible && (
+            <span className={`collapse-arrow ${isCollapsed ? 'collapsed' : ''}`}>
+              {isCollapsed ? '▶' : '▼'}
+            </span>
           )}
         </div>
+        {(!isCollapsible || !isCollapsed) && (
+          <div className="message-content">
+            {isMarkdownContent ? (
+              <div className="markdown-content">{renderMarkdown(message.content)}</div>
+            ) : (
+              <div className="regular-content">{message.content}</div>
+            )}
+          </div>
+        )}
       </div>
     );
   };
@@ -371,6 +425,7 @@ function App() {
       <div className="chat-container">
         {messages.length === 0 ? (
           <div className="welcome-message">
+            <img src={logo} alt="Medical Deep Research Logo" />
             <h1>Medical Deep Research</h1>
             <p>
               I can help you with medical research questions. Ask me anything about medical conditions,
@@ -381,7 +436,7 @@ function App() {
           <div className="messages">
             {messages.map((message, index) => (
               <div key={index} className={`message ${message.type}`}>
-                {renderMessage(message)}
+                {renderMessage(message, index)}
               </div>
             ))}
             {renderActiveTools()}
@@ -396,6 +451,206 @@ function App() {
             <div ref={messagesEndRef} />
           </div>
         )}
+        
+        <div className="configuration-bar">
+          <div className="config-section">
+            <label 
+              className="config-label"
+              onClick={() => setOpenConfig(openConfig === 'model' ? null : 'model')}
+            >
+              <span className="config-name">Model</span>
+              <span className="selected-value">{selectedModel}</span>
+              <span className={`dropdown-arrow ${openConfig === 'model' ? 'open' : ''}`}>▼</span>
+            </label>
+            {openConfig === 'model' && (
+              <div className="config-options">
+                {['OpenAI o1', 'OpenAI o3-mini', 'Claude Sonnet 4', 'Gemini 2.5 pro'].map((model) => (
+                  <label key={model} className={`radio-option ${selectedModel === model ? 'selected' : ''}`}>
+                    <input
+                      type="radio"
+                      name="model"
+                      value={model}
+                      checked={selectedModel === model}
+                      onChange={(e) => {
+                        setSelectedModel(e.target.value);
+                        setOpenConfig(null);
+                      }}
+                    />
+                    <span className="radio-label">{model}</span>
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="config-section">
+            <label 
+              className="config-label"
+              onClick={() => setOpenConfig(openConfig === 'format' ? null : 'format')}
+            >
+              <span className="config-name">Output</span>
+              <span className="selected-value">
+                {outputFormat === 'long_report' ? 'Long' : 
+                 outputFormat === 'short_report' ? 'Short' : 
+                 outputFormat === 'custom' ? 'Custom' : 'Long'}
+              </span>
+              <span className={`dropdown-arrow ${openConfig === 'format' ? 'open' : ''}`}>▼</span>
+            </label>
+            {openConfig === 'format' && (
+              <div className="config-options">
+                <label className={`radio-option ${outputFormat === 'long_report' ? 'selected' : ''}`}>
+                  <input
+                    type="radio"
+                    name="format"
+                    value="long_report"
+                    checked={outputFormat === 'long_report'}
+                    onChange={(e) => {
+                      setOutputFormat(e.target.value);
+                      setOpenConfig(null);
+                    }}
+                  />
+                  <span className="radio-label">Long Report</span>
+                </label>
+                <label className={`radio-option ${outputFormat === 'short_report' ? 'selected' : ''}`}>
+                  <input
+                    type="radio"
+                    name="format"
+                    value="short_report"
+                    checked={outputFormat === 'short_report'}
+                    onChange={(e) => {
+                      setOutputFormat(e.target.value);
+                      setOpenConfig(null);
+                    }}
+                  />
+                  <span className="radio-label">Short Summary</span>
+                </label>
+                <label className={`radio-option ${outputFormat === 'custom' ? 'selected' : ''}`}>
+                  <input
+                    type="radio"
+                    name="format"
+                    value="custom"
+                    checked={outputFormat === 'custom'}
+                    onChange={(e) => {
+                      setOutputFormat(e.target.value);
+                      setOpenConfig(null);
+                    }}
+                  />
+                  <span className="radio-label">Custom Format</span>
+                </label>
+                {outputFormat === 'custom' && (
+                  <div className="custom-format-input">
+                    <input
+                      type="text"
+                      placeholder="Type your custom format here..."
+                      value={customFormat}
+                      onChange={(e) => setCustomFormat(e.target.value)}
+                      className="format-input"
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          <div className="config-section">
+            <label 
+              className="config-label"
+              onClick={() => setOpenConfig(openConfig === 'feedback' ? null : 'feedback')}
+            >
+              <span className="config-name">Feedback</span>
+              <span className="selected-value">{humanFeedback === 'yes' ? 'Yes' : 'No'}</span>
+              <span className={`dropdown-arrow ${openConfig === 'feedback' ? 'open' : ''}`}>▼</span>
+            </label>
+            {openConfig === 'feedback' && (
+              <div className="config-options">
+                <label className={`radio-option ${humanFeedback === 'yes' ? 'selected' : ''}`}>
+                  <input
+                    type="radio"
+                    name="feedback"
+                    value="yes"
+                    checked={humanFeedback === 'yes'}
+                    onChange={(e) => {
+                      setHumanFeedback(e.target.value);
+                      setOpenConfig(null);
+                    }}
+                  />
+                  <span className="radio-label">Yes</span>
+                </label>
+                <label className={`radio-option ${humanFeedback === 'no' ? 'selected' : ''}`}>
+                  <input
+                    type="radio"
+                    name="feedback"
+                    value="no"
+                    checked={humanFeedback === 'no'}
+                    onChange={(e) => {
+                      setHumanFeedback(e.target.value);
+                      setOpenConfig(null);
+                    }}
+                  />
+                  <span className="radio-label">No</span>
+                </label>
+              </div>
+            )}
+          </div>
+
+          <div className="config-section">
+            <label 
+              className="config-label"
+              onClick={() => setOpenConfig(openConfig === 'thinkMode' ? null : 'thinkMode')}
+            >
+              <span className="config-name">Mode</span>
+              <span className="selected-value">
+                {thinkMode === 'high' ? 'High' : 
+                 thinkMode === 'medium' ? 'Medium' : 'Low'}
+              </span>
+              <span className={`dropdown-arrow ${openConfig === 'thinkMode' ? 'open' : ''}`}>▼</span>
+            </label>
+            {openConfig === 'thinkMode' && (
+              <div className="config-options">
+                <label className={`radio-option ${thinkMode === 'high' ? 'selected' : ''}`}>
+                  <input
+                    type="radio"
+                    name="thinkMode"
+                    value="high"
+                    checked={thinkMode === 'high'}
+                    onChange={(e) => {
+                      setThinkMode(e.target.value);
+                      setOpenConfig(null);
+                    }}
+                  />
+                  <span className="radio-label">High</span>
+                </label>
+                <label className={`radio-option ${thinkMode === 'medium' ? 'selected' : ''}`}>
+                  <input
+                    type="radio"
+                    name="thinkMode"
+                    value="medium"
+                    checked={thinkMode === 'medium'}
+                    onChange={(e) => {
+                      setThinkMode(e.target.value);
+                      setOpenConfig(null);
+                    }}
+                  />
+                  <span className="radio-label">Medium</span>
+                </label>
+                <label className={`radio-option ${thinkMode === 'low' ? 'selected' : ''}`}>
+                  <input
+                    type="radio"
+                    name="thinkMode"
+                    value="low"
+                    checked={thinkMode === 'low'}
+                    onChange={(e) => {
+                      setThinkMode(e.target.value);
+                      setOpenConfig(null);
+                    }}
+                  />
+                  <span className="radio-label">Low</span>
+                </label>
+              </div>
+            )}
+          </div>
+        </div>
+
         <form onSubmit={handleSubmit} className="input-form">
           <input
             type="text"

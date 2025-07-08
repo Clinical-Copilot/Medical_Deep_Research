@@ -119,11 +119,9 @@ def planner_node(
         else:
             return Command(goto="__end__")
     
-    # Always create Plan object for consistency
-    new_plan = Plan.model_validate(curr_plan)
-    
-    if new_plan.has_enough_context:
+    if curr_plan.get("has_enough_context"):
         logger.info("Planner response has enough context.")
+        new_plan = Plan.model_validate(curr_plan)
         return Command(
             update={
                 "messages": [AIMessage(content=full_response, name="planner")],
@@ -134,7 +132,7 @@ def planner_node(
     return Command(
         update={
             "messages": [AIMessage(content=full_response, name="planner")],
-            "current_plan": new_plan,
+            "current_plan": full_response,
         },
         goto="feedback_node",
     )
@@ -247,15 +245,6 @@ def human_feedback_node(
         print("\n" + "="*50)
         print("PLAN REVIEW REQUIRED")
         print("="*50)
-        # print("Current plan:")
-        # if hasattr(current_plan, 'title'):
-        #     print(f"Title: {current_plan.title}")
-        # if hasattr(current_plan, 'thought'):
-        #     print(f"Thought: {current_plan.thought}")
-        # if hasattr(current_plan, 'steps'):
-        #     print("Steps:")
-        #     for i, step in enumerate(current_plan.steps, 1):
-        #         print(f"  {i}. {step.title}")
         print("="*50)
         print("Options:")
         print("  [ACCEPTED] - Accept the plan and continue")
@@ -284,20 +273,12 @@ def human_feedback_node(
     plan_iterations = state["plan_iterations"] if state.get("plan_iterations", 0) else 0
     goto = "research_team"
     try:
-        # Check if current_plan is already a Plan object
-        if hasattr(current_plan, 'has_enough_context'):
-            # It's already a Plan object, use it directly
-            new_plan = current_plan
-        else:
-            # It's a string, process it as before
-            current_plan = repair_json_output(current_plan)
-            # increment the plan iterations
-            plan_iterations += 1
-            # parse the plan
-            new_plan = json.loads(current_plan)
-            new_plan = Plan.model_validate(new_plan)
-        
-        if new_plan.has_enough_context:
+        current_plan = repair_json_output(current_plan)
+        # increment the plan iterations
+        plan_iterations += 1
+        # parse the plan
+        new_plan = json.loads(current_plan)
+        if new_plan["has_enough_context"]:
             goto = "reporter"
     except json.JSONDecodeError:
         logger.warning("Planner response is not a valid JSON")
@@ -308,7 +289,7 @@ def human_feedback_node(
 
     return Command(
         update={
-            "current_plan": new_plan,
+            "current_plan": Plan.model_validate(new_plan),
             "plan_iterations": plan_iterations,
         },
         goto=goto,
@@ -317,7 +298,7 @@ def human_feedback_node(
 
 def research_team_node(
     state: State,
-) -> Command[Literal["planner", "researcher", "coder"]]:
+) -> Command[Literal["planner", "researcher", "coder", "reporter"]]:
     """Research team node that collaborates on tasks."""
     logger.info("Research team is collaborating on tasks.")
     current_plan = state.get("current_plan")
@@ -481,7 +462,11 @@ async def _setup_and_execute_agent_step(
                 )
                 loaded_tools.append(tool)
         agent = create_agent(agent_type, agent_type, loaded_tools, agent_type)
-        return await _execute_agent_step(state, agent, agent_type)
+    else:
+        # Fallback: create agent with default tools when no MCP servers configured
+        agent = create_agent(agent_type, agent_type, default_tools, agent_type)
+    
+    return await _execute_agent_step(state, agent, agent_type)
 
 
 async def researcher_node(
@@ -490,9 +475,8 @@ async def researcher_node(
     """Researcher node that do research"""
     logger.info("Researcher node is researching.")
     configurable = Configuration.from_runnable_config(config)
-    research_tools = []
-    # research_tools = [openai_search_tool, litesense_tool, crawl_tool]
-    # [get_boxed_warning_info_by_drug_name]
+    research_tools = [openai_search_tool, litesense_tool, crawl_tool]
+
     return await _setup_and_execute_agent_step(
         state,
         config,
