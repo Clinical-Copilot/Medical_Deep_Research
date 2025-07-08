@@ -18,8 +18,6 @@ function App() {
   const [maxSteps, setMaxSteps] = useState(3);
   const [openConfig, setOpenConfig] = useState(null);
   const [collapsedMessages, setCollapsedMessages] = useState(new Set());
-  const [isLoadingPage, setIsLoadingPage] = useState(true);
-  const [loadingProgress, setLoadingProgress] = useState(0);
   const messagesEndRef = useRef(null);
   const stepCounter = useRef(0);
   const resultTimer = useRef(null);
@@ -43,32 +41,6 @@ function App() {
   useEffect(() => {
     scrollToBottom();
   }, [messages, currentStep]);
-
-  useEffect(() => {
-    // Simulate loading process
-    const loadingSteps = [
-      { progress: 20, text: "Initializing Medical AI..." },
-      { progress: 40, text: "Loading Research Models..." },
-      { progress: 60, text: "Preparing Analysis Tools..." },
-      { progress: 80, text: "Setting Up Interface..." },
-      { progress: 100, text: "Ready!" }
-    ];
-
-    let currentStep = 0;
-    const interval = setInterval(() => {
-      if (currentStep < loadingSteps.length) {
-        setLoadingProgress(loadingSteps[currentStep].progress);
-        currentStep++;
-      } else {
-        clearInterval(interval);
-        setTimeout(() => {
-          setIsLoadingPage(false);
-        }, 300);
-      }
-    }, 400);
-
-    return () => clearInterval(interval);
-  }, []);
 
   const renderMarkdown = (text) => {
     // Preprocess the text to ensure proper table formatting
@@ -448,295 +420,250 @@ function App() {
     );
   };
 
-  const renderLoadingPage = () => {
-    const loadingSteps = [
-      "Initializing Medical AI...",
-      "Loading Research Models...",
-      "Preparing Analysis Tools...",
-      "Setting Up Interface...",
-      "Ready!"
-    ];
-
-    const currentStepIndex = Math.floor(loadingProgress / 20);
-    const currentText = loadingSteps[currentStepIndex] || loadingSteps[loadingSteps.length - 1];
-
-    return (
-      <div className="loading-page">
-        <div className="loading-container">
-          <div className="loading-logo">
-            <img src={logo} alt="Medical Deep Research Logo" />
-          </div>
-          <h1 className="loading-title">Medical Deep Research</h1>
-          <div className="loading-progress-container">
-            <div className="loading-progress-bar">
-              <div 
-                className="loading-progress-fill"
-                style={{ width: `${loadingProgress}%` }}
-              ></div>
-            </div>
-            <div className="loading-progress-text">{currentText}</div>
-            <div className="loading-progress-percentage">{loadingProgress}%</div>
-          </div>
-          <div className="loading-animation">
-            <div className="loading-dots">
-              <div className="dot"></div>
-              <div className="dot"></div>
-              <div className="dot"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
   return (
     <div className="app">
-      {isLoadingPage ? (
-        renderLoadingPage()
-      ) : (
-        <div className="chat-container">
-          {messages.length === 0 ? (
-            <div className="welcome-message">
-              <img src={logo} alt="Medical Deep Research Logo" />
-              <h1>Medical Deep Research</h1>
-              <p>
-                I can help you with medical research questions. Ask me anything about medical conditions,
-                treatments, research findings, or healthcare topics.
-              </p>
-            </div>
-          ) : (
-            <div className="messages">
-              {messages.map((message, index) => (
-                <div key={index} className={`message ${message.type}`}>
-                  {renderMessage(message, index)}
+      <div className="chat-container">
+        {messages.length === 0 ? (
+          <div className="welcome-message">
+            <img src={logo} alt="Medical Deep Research Logo" />
+            <h1>Medical Deep Research</h1>
+            <p>
+              I can help you with medical research questions. Ask me anything about medical conditions,
+              treatments, research findings, or healthcare topics.
+            </p>
+          </div>
+        ) : (
+          <div className="messages">
+            {messages.map((message, index) => (
+              <div key={index} className={`message ${message.type}`}>
+                {renderMessage(message, index)}
+              </div>
+            ))}
+            {renderActiveTools()}
+            {isLoading && (
+              <div className="message system">
+                <div className="loading">
+                  <div className="loading-spinner"></div>
+                  <span className="status-message">{currentStep}</span>
                 </div>
-              ))}
-              {renderActiveTools()}
-              {isLoading && (
-                <div className="message system">
-                  <div className="loading">
-                    <div className="loading-spinner"></div>
-                    <span className="status-message">{currentStep}</span>
-                  </div>
-                </div>
-              )}
-              <div ref={messagesEndRef} />
-            </div>
-          )}
-          
-          <div className="configuration-bar">
-            <div className="config-section">
-              <label 
-                className="config-label"
-                onClick={() => setOpenConfig(openConfig === 'model' ? null : 'model')}
-              >
-                <span className="config-name">Model</span>
-                <span className="selected-value">{selectedModel}</span>
-                <span className={`dropdown-arrow ${openConfig === 'model' ? 'open' : ''}`}>▼</span>
-              </label>
-              {openConfig === 'model' && (
-                <div className="config-options">
-                  {['OpenAI o1', 'OpenAI o3-mini', 'Claude Sonnet 4', 'Gemini 2.5 pro'].map((model) => (
-                    <label key={model} className={`radio-option ${selectedModel === model ? 'selected' : ''}`}>
-                      <input
-                        type="radio"
-                        name="model"
-                        value={model}
-                        checked={selectedModel === model}
-                        onChange={(e) => {
-                          setSelectedModel(e.target.value);
-                          setOpenConfig(null);
-                        }}
-                      />
-                      <span className="radio-label">{model}</span>
-                    </label>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="config-section">
-              <label 
-                className="config-label"
-                onClick={() => setOpenConfig(openConfig === 'format' ? null : 'format')}
-              >
-                <span className="config-name">Output</span>
-                <span className="selected-value">
-                  {outputFormat === 'long_report' ? 'Long' : 
-                   outputFormat === 'short_report' ? 'Short' : 
-                   outputFormat === 'custom' ? 'Custom' : 'Long'}
-                </span>
-                <span className={`dropdown-arrow ${openConfig === 'format' ? 'open' : ''}`}>▼</span>
-              </label>
-              {openConfig === 'format' && (
-                <div className="config-options">
-                  <label className={`radio-option ${outputFormat === 'long_report' ? 'selected' : ''}`}>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+        )}
+        
+        <div className="configuration-bar">
+          <div className="config-section">
+            <label 
+              className="config-label"
+              onClick={() => setOpenConfig(openConfig === 'model' ? null : 'model')}
+            >
+              <span className="config-name">Model</span>
+              <span className="selected-value">{selectedModel}</span>
+              <span className={`dropdown-arrow ${openConfig === 'model' ? 'open' : ''}`}>▼</span>
+            </label>
+            {openConfig === 'model' && (
+              <div className="config-options">
+                {['OpenAI o1', 'OpenAI o3-mini', 'Claude Sonnet 4', 'Gemini 2.5 pro'].map((model) => (
+                  <label key={model} className={`radio-option ${selectedModel === model ? 'selected' : ''}`}>
                     <input
                       type="radio"
-                      name="format"
-                      value="long_report"
-                      checked={outputFormat === 'long_report'}
+                      name="model"
+                      value={model}
+                      checked={selectedModel === model}
                       onChange={(e) => {
-                        setOutputFormat(e.target.value);
+                        setSelectedModel(e.target.value);
                         setOpenConfig(null);
                       }}
                     />
-                    <span className="radio-label">Long Report</span>
+                    <span className="radio-label">{model}</span>
                   </label>
-                  <label className={`radio-option ${outputFormat === 'short_report' ? 'selected' : ''}`}>
-                    <input
-                      type="radio"
-                      name="format"
-                      value="short_report"
-                      checked={outputFormat === 'short_report'}
-                      onChange={(e) => {
-                        setOutputFormat(e.target.value);
-                        setOpenConfig(null);
-                      }}
-                    />
-                    <span className="radio-label">Short Summary</span>
-                  </label>
-                  <label className={`radio-option ${outputFormat === 'custom' ? 'selected' : ''}`}>
-                    <input
-                      type="radio"
-                      name="format"
-                      value="custom"
-                      checked={outputFormat === 'custom'}
-                      onChange={(e) => {
-                        setOutputFormat(e.target.value);
-                        setOpenConfig(null);
-                      }}
-                    />
-                    <span className="radio-label">Custom Format</span>
-                  </label>
-                  {outputFormat === 'custom' && (
-                    <div className="custom-format-input">
-                      <input
-                        type="text"
-                        placeholder="Type your custom format here..."
-                        value={customFormat}
-                        onChange={(e) => setCustomFormat(e.target.value)}
-                        className="format-input"
-                      />
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-
-            <div className="config-section">
-              <label 
-                className="config-label"
-                onClick={() => setOpenConfig(openConfig === 'feedback' ? null : 'feedback')}
-              >
-                <span className="config-name">Feedback</span>
-                <span className="selected-value">{humanFeedback === 'yes' ? 'Yes' : 'No'}</span>
-                <span className={`dropdown-arrow ${openConfig === 'feedback' ? 'open' : ''}`}>▼</span>
-              </label>
-              {openConfig === 'feedback' && (
-                <div className="config-options">
-                  <label className={`radio-option ${humanFeedback === 'yes' ? 'selected' : ''}`}>
-                    <input
-                      type="radio"
-                      name="feedback"
-                      value="yes"
-                      checked={humanFeedback === 'yes'}
-                      onChange={(e) => {
-                        setHumanFeedback(e.target.value);
-                        setOpenConfig(null);
-                      }}
-                    />
-                    <span className="radio-label">Yes</span>
-                  </label>
-                  <label className={`radio-option ${humanFeedback === 'no' ? 'selected' : ''}`}>
-                    <input
-                      type="radio"
-                      name="feedback"
-                      value="no"
-                      checked={humanFeedback === 'no'}
-                      onChange={(e) => {
-                        setHumanFeedback(e.target.value);
-                        setOpenConfig(null);
-                      }}
-                    />
-                    <span className="radio-label">No</span>
-                  </label>
-                </div>
-              )}
-            </div>
-
-            <div className="config-section">
-              <label 
-                className="config-label"
-                onClick={() => setOpenConfig(openConfig === 'thinkMode' ? null : 'thinkMode')}
-              >
-                <span className="config-name">Mode</span>
-                <span className="selected-value">
-                  {thinkMode === 'high' ? 'High' : 
-                   thinkMode === 'medium' ? 'Medium' : 'Low'}
-                </span>
-                <span className={`dropdown-arrow ${openConfig === 'thinkMode' ? 'open' : ''}`}>▼</span>
-              </label>
-              {openConfig === 'thinkMode' && (
-                <div className="config-options">
-                  <label className={`radio-option ${thinkMode === 'high' ? 'selected' : ''}`}>
-                    <input
-                      type="radio"
-                      name="thinkMode"
-                      value="high"
-                      checked={thinkMode === 'high'}
-                      onChange={(e) => {
-                        setThinkMode(e.target.value);
-                        setOpenConfig(null);
-                      }}
-                    />
-                    <span className="radio-label">High</span>
-                  </label>
-                  <label className={`radio-option ${thinkMode === 'medium' ? 'selected' : ''}`}>
-                    <input
-                      type="radio"
-                      name="thinkMode"
-                      value="medium"
-                      checked={thinkMode === 'medium'}
-                      onChange={(e) => {
-                        setThinkMode(e.target.value);
-                        setOpenConfig(null);
-                      }}
-                    />
-                    <span className="radio-label">Medium</span>
-                  </label>
-                  <label className={`radio-option ${thinkMode === 'low' ? 'selected' : ''}`}>
-                    <input
-                      type="radio"
-                      name="thinkMode"
-                      value="low"
-                      checked={thinkMode === 'low'}
-                      onChange={(e) => {
-                        setThinkMode(e.target.value);
-                        setOpenConfig(null);
-                      }}
-                    />
-                    <span className="radio-label">Low</span>
-                  </label>
-                </div>
-              )}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
 
-          <form onSubmit={handleSubmit} className="input-form">
-            <input
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask a medical research question..."
-              disabled={isLoading}
-            />
-            <button type="submit" disabled={isLoading || !input.trim()}>
-              {isLoading ? '...' : 'Send'}
-            </button>
-          </form>
+          <div className="config-section">
+            <label 
+              className="config-label"
+              onClick={() => setOpenConfig(openConfig === 'format' ? null : 'format')}
+            >
+              <span className="config-name">Output</span>
+              <span className="selected-value">
+                {outputFormat === 'long_report' ? 'Long' : 
+                 outputFormat === 'short_report' ? 'Short' : 
+                 outputFormat === 'custom' ? 'Custom' : 'Long'}
+              </span>
+              <span className={`dropdown-arrow ${openConfig === 'format' ? 'open' : ''}`}>▼</span>
+            </label>
+            {openConfig === 'format' && (
+              <div className="config-options">
+                <label className={`radio-option ${outputFormat === 'long_report' ? 'selected' : ''}`}>
+                  <input
+                    type="radio"
+                    name="format"
+                    value="long_report"
+                    checked={outputFormat === 'long_report'}
+                    onChange={(e) => {
+                      setOutputFormat(e.target.value);
+                      setOpenConfig(null);
+                    }}
+                  />
+                  <span className="radio-label">Long Report</span>
+                </label>
+                <label className={`radio-option ${outputFormat === 'short_report' ? 'selected' : ''}`}>
+                  <input
+                    type="radio"
+                    name="format"
+                    value="short_report"
+                    checked={outputFormat === 'short_report'}
+                    onChange={(e) => {
+                      setOutputFormat(e.target.value);
+                      setOpenConfig(null);
+                    }}
+                  />
+                  <span className="radio-label">Short Summary</span>
+                </label>
+                <label className={`radio-option ${outputFormat === 'custom' ? 'selected' : ''}`}>
+                  <input
+                    type="radio"
+                    name="format"
+                    value="custom"
+                    checked={outputFormat === 'custom'}
+                    onChange={(e) => {
+                      setOutputFormat(e.target.value);
+                      setOpenConfig(null);
+                    }}
+                  />
+                  <span className="radio-label">Custom Format</span>
+                </label>
+                {outputFormat === 'custom' && (
+                  <div className="custom-format-input">
+                    <input
+                      type="text"
+                      placeholder="Type your custom format here..."
+                      value={customFormat}
+                      onChange={(e) => setCustomFormat(e.target.value)}
+                      className="format-input"
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          <div className="config-section">
+            <label 
+              className="config-label"
+              onClick={() => setOpenConfig(openConfig === 'feedback' ? null : 'feedback')}
+            >
+              <span className="config-name">Feedback</span>
+              <span className="selected-value">{humanFeedback === 'yes' ? 'Yes' : 'No'}</span>
+              <span className={`dropdown-arrow ${openConfig === 'feedback' ? 'open' : ''}`}>▼</span>
+            </label>
+            {openConfig === 'feedback' && (
+              <div className="config-options">
+                <label className={`radio-option ${humanFeedback === 'yes' ? 'selected' : ''}`}>
+                  <input
+                    type="radio"
+                    name="feedback"
+                    value="yes"
+                    checked={humanFeedback === 'yes'}
+                    onChange={(e) => {
+                      setHumanFeedback(e.target.value);
+                      setOpenConfig(null);
+                    }}
+                  />
+                  <span className="radio-label">Yes</span>
+                </label>
+                <label className={`radio-option ${humanFeedback === 'no' ? 'selected' : ''}`}>
+                  <input
+                    type="radio"
+                    name="feedback"
+                    value="no"
+                    checked={humanFeedback === 'no'}
+                    onChange={(e) => {
+                      setHumanFeedback(e.target.value);
+                      setOpenConfig(null);
+                    }}
+                  />
+                  <span className="radio-label">No</span>
+                </label>
+              </div>
+            )}
+          </div>
+
+          <div className="config-section">
+            <label 
+              className="config-label"
+              onClick={() => setOpenConfig(openConfig === 'thinkMode' ? null : 'thinkMode')}
+            >
+              <span className="config-name">Mode</span>
+              <span className="selected-value">
+                {thinkMode === 'high' ? 'High' : 
+                 thinkMode === 'medium' ? 'Medium' : 'Low'}
+              </span>
+              <span className={`dropdown-arrow ${openConfig === 'thinkMode' ? 'open' : ''}`}>▼</span>
+            </label>
+            {openConfig === 'thinkMode' && (
+              <div className="config-options">
+                <label className={`radio-option ${thinkMode === 'high' ? 'selected' : ''}`}>
+                  <input
+                    type="radio"
+                    name="thinkMode"
+                    value="high"
+                    checked={thinkMode === 'high'}
+                    onChange={(e) => {
+                      setThinkMode(e.target.value);
+                      setOpenConfig(null);
+                    }}
+                  />
+                  <span className="radio-label">High</span>
+                </label>
+                <label className={`radio-option ${thinkMode === 'medium' ? 'selected' : ''}`}>
+                  <input
+                    type="radio"
+                    name="thinkMode"
+                    value="medium"
+                    checked={thinkMode === 'medium'}
+                    onChange={(e) => {
+                      setThinkMode(e.target.value);
+                      setOpenConfig(null);
+                    }}
+                  />
+                  <span className="radio-label">Medium</span>
+                </label>
+                <label className={`radio-option ${thinkMode === 'low' ? 'selected' : ''}`}>
+                  <input
+                    type="radio"
+                    name="thinkMode"
+                    value="low"
+                    checked={thinkMode === 'low'}
+                    onChange={(e) => {
+                      setThinkMode(e.target.value);
+                      setOpenConfig(null);
+                    }}
+                  />
+                  <span className="radio-label">Low</span>
+                </label>
+              </div>
+            )}
+          </div>
         </div>
-      )}
+
+        <form onSubmit={handleSubmit} className="input-form">
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Ask a medical research question..."
+            disabled={isLoading}
+          />
+          <button type="submit" disabled={isLoading || !input.trim()}>
+            {isLoading ? '...' : 'Send'}
+          </button>
+        </form>
+      </div>
     </div>
   );
 }

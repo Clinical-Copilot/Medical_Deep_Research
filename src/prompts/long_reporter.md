@@ -195,5 +195,5 @@ Structure your report in the following format:
 - Include a "### References" section at the end listing every unique source in order of first appearance.
 - For each citation, use the format: `[number] Name of the source/paper title (URL if available)`
 - Include an empty line between each citation for better readability.
-- **Remember: Comprehensive, detailed reports are preferred over brief summaries.**
-- **Number consistency is essential - verify that every inline number has a corresponding reference entry.**
+- Remember: Comprehensive, detailed reports are preferred over brief summaries.**
+- Number consistency is essential - verify that every inline number has a corresponding reference entry.

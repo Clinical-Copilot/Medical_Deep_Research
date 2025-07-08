@@ -22,7 +22,7 @@ app = FastAPI()
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:3001"],
+    allow_origins=["http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -47,10 +47,8 @@ async def chat(request: ChatRequest):
     async def event_stream():
         try:
             print(f"[BACKEND] Starting workflow for query: {request.query}")
-            # Yield results progressively from run_agent_workflow_async
             async for result in run_agent_workflow_async(
                 user_input=request.query,
-                debug=False,
                 max_plan_iterations=request.max_plan_iterations,
                 max_step_num=request.max_step_num,
                 human_feedback=request.human_feedback

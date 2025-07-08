@@ -7,9 +7,12 @@ from src.graph import build_graph
 from langchain_core.messages import HumanMessage, AIMessage
 from src.prompts.planner_model import Plan
 from src.tools.decorators import set_tool_event_callback
+from src.graph.nodes import reporter_node
 
 # Create logs directory if it doesn't exist
-log_dir = Path("logs")
+# Get the absolute path to the meddr root directory
+meddr_root = Path(__file__).parent.parent.absolute()
+log_dir = meddr_root / "logs"
 log_dir.mkdir(exist_ok=True)
 
 # Configure root logger
@@ -40,17 +43,18 @@ graph = build_graph()
 def load_mcp_config():
     """Load MCP configuration from JSON file."""
     try:
-        config_path = Path("mcp_config.json")
+        # Get the absolute path to the meddr root directory
+        meddr_root = Path(__file__).parent.parent.absolute()
+        config_path = meddr_root / "mcp_config.json"
+        logger.info(f"[workflow] Looking for mcp_config.json at: {config_path}")
         if config_path.exists():
             with open(config_path, "r") as f:
                 config = json.load(f)
                 mcp_servers = config.get("mcp_servers", {})
                 logger.info(f"Loaded MCP servers: {list(mcp_servers.keys())}")
-                for server_name, server_config in mcp_servers.items():
-                    logger.info(f"Server '{server_name}' config: {server_config}")
                 return mcp_servers
         else:
-            logger.warning("mcp_config.json not found, using default MCP settings")
+            logger.warning(f"mcp_config.json not found at {config_path}, using default MCP settings")
             return {}
     except Exception as e:
         logger.error(f"Error loading MCP config: {e}")
@@ -71,8 +75,6 @@ def serialize_message(message):
 
 
 def serialize_plan(plan):
-    logger.info(f"[serialize_plan] Plan type: {type(plan)}")
-
     if isinstance(plan, Plan):
         return {
             "has_enough_context": plan.has_enough_context,
@@ -92,12 +94,10 @@ def serialize_plan(plan):
     elif isinstance(plan, dict):
         # Unwrap if necessary
         if "planner_output" in plan and isinstance(plan["planner_output"], dict):
-            logger.info("[serialize_plan] Unpacking 'planner_output'")
             plan = plan["planner_output"]
 
         steps = plan.get("steps", [])
         if isinstance(steps, list):
-            logger.info("[serialize_plan] Treating as dict with steps")
             return {
                 "title": plan.get("title", ""),
                 "thought": plan.get("thought", ""),
@@ -113,22 +113,36 @@ def serialize_plan(plan):
             }
 
     logger.warning("[serialize_plan] Invalid plan format")
-    logger.warning(f"[serialize_plan] Received: {plan}")
     return {"error": "Invalid plan format"}
+
+
+async def handle_recursion_limit(state, config):
+    """Handle recursion limit by calling reporter directly."""
+    logger.info("[workflow] Recursion limit reached, calling reporter directly")
+    try:
+        result = reporter_node(state, config)
+        if hasattr(result, 'value') and isinstance(result.value, dict):
+            return result.value.get("final_report", "")
+        elif isinstance(result, dict):
+            return result.get("final_report", "")
+        else:
+            return "Report generation completed due to recursion limit."
+    except Exception as e:
+        logger.error(f"[workflow] Error calling reporter: {e}")
+        return f"Report generation failed due to recursion limit: {str(e)}"
 
 
 async def run_agent_workflow_async(
     user_input: str,
-    debug: bool = False,
     max_plan_iterations: int = 1,
-    max_step_num: int = 2,  # Reduced to prevent deep recursion
+    max_step_num: int = 3,  # Reduced to prevent deep recursion
     output_format: str = "long-report",
     human_feedback: bool = False,  # Whether to require human feedback (default: False for auto-accept)
 ):
     if not user_input:
         raise ValueError("Input could not be empty")
 
-    logger.info(f"[workflow] Starting workflow with query: {user_input}")
+    logger.info(f"[workflow] Starting workflow with query: {user_input[:100]}...")
     
     # Store reference to yielder for tool events
     tool_events_queue = asyncio.Queue()
@@ -148,7 +162,6 @@ async def run_agent_workflow_async(
         "observations": [],  # Track observations
         "final_report": ""  # Initialize final report
     }
-    logger.info(f"[workflow] Created initial state with keys: {list(initial_state.keys())}")
     
     # Load MCP servers configuration
     mcp_servers = load_mcp_config()
@@ -170,53 +183,47 @@ async def run_agent_workflow_async(
     current_plan_yielded = False
     yielded_steps = set()
 
+    logger.info("=== WORKFLOW STARTING ===")
+    
+    # Track the last state for recursion limit handling
+    last_state = initial_state
+    
     try:
-        logger.info("=== WORKFLOW STARTING ===")
         async for s in graph.astream(input=initial_state, config=config, stream_mode="values"):
+            # Update last state for potential recursion limit handling
+            last_state = s
+            
             try:
-                logger.info(f"=== NEW STATE UPDATE RECEIVED ===")
                 # Check for any tool events first
                 while not tool_events_queue.empty():
                     try:
                         tool_event = tool_events_queue.get_nowait()
-                        logger.info(f"[workflow] Yielding tool event: {tool_event}")
                         yield tool_event
                     except asyncio.QueueEmpty:
                         break
                 
-                logger.info(f"[workflow] Processing state update: messages count = {len(s.get('messages', []))}")
-                logger.info(f"[workflow] State keys in this update: {list(s.keys()) if isinstance(s, dict) else 'Not a dict'}")
                 if isinstance(s, dict) and "messages" in s:
                     if len(s["messages"]) > last_message_cnt:
                         new_msgs = s["messages"][last_message_cnt:]
                         last_message_cnt = len(s["messages"])
-                        logger.info(f"[workflow] Yielding {len(new_msgs)} new messages")
                         for msg in new_msgs:
                             serialized = serialize_message(msg)
-                            logger.info(f"[workflow] Yielding message: {serialized}")
                             yield {"type": "message", "content": serialized}
 
                 if isinstance(s, dict) and not current_plan_yielded and "current_plan" in s and s["current_plan"]:
                     raw_plan = s["current_plan"]
-                    logger.info(f"[workflow] Found current_plan in state: {raw_plan}")
 
                     # Handle nested "planner_output" if it exists
                     if isinstance(raw_plan, dict) and "planner_output" in raw_plan:
-                        logger.info("[workflow] Unpacking 'planner_output' from current_plan")
                         raw_plan = raw_plan["planner_output"]
 
-                    logger.info(f"[workflow] RAW PLAN TYPE: {type(raw_plan)}")
-                    logger.info(f"[workflow] RAW PLAN VALUE: {raw_plan}")
-
                     serialized_plan = serialize_plan(raw_plan)
-                    logger.info(f"[workflow] SERIALIZED PLAN: {serialized_plan}")
 
                     # Only yield plan if it's not an error
                     if not (isinstance(serialized_plan, dict) and "error" in serialized_plan):
                         yield {"type": "plan", "content": serialized_plan}
                         current_plan_yielded = True
-                    else:
-                        logger.info("[workflow] Skipping plan yield due to serialization error")
+                        logger.info("[workflow] Plan yielded successfully")
 
                 if isinstance(s, dict) and "current_plan" in s and s["current_plan"]:
                     plan = s["current_plan"]
@@ -229,7 +236,7 @@ async def run_agent_workflow_async(
                             step_title = step.title if hasattr(step, "title") else step.get("title")
                             step_res = step.execution_res if hasattr(step, "execution_res") else step.get("execution_res")
                             if step_res and step_title not in yielded_steps:
-                                logger.info(f"[workflow] YIELDING STEP: {step_title}")
+                                logger.info(f"[workflow] Yielding step: {step_title}")
                                 yield {
                                     "type": "execution_res",
                                     "step_title": step_title,
@@ -238,40 +245,32 @@ async def run_agent_workflow_async(
                                 yielded_steps.add(step_title)
 
                 # Check for final report
-                logger.info(f"[workflow] Checking for final_report in state...")
-                if isinstance(s, dict):
-                    logger.info(f"[workflow] State is dict with keys: {list(s.keys())}")
-                    if "final_report" in s:
-                        logger.info(f"[workflow] final_report key exists! Value: {s['final_report']}")
-                        if s["final_report"]:
-                            logger.info(f"[workflow] final_report has content: {s['final_report'][:100]}...")
-                            final_report_event = {
-                                "type": "final_report",
-                                "content": s["final_report"]
-                            }
-                            logger.info(f"[workflow] About to yield final_report event: {final_report_event}")
-                            yield final_report_event
-                            logger.info(f"[workflow] Successfully yielded final_report event")
-                        else:
-                            logger.info(f"[workflow] final_report exists but is empty/falsy")
-                    else:
-                        logger.info(f"[workflow] final_report key NOT found in state")
-                else:
-                    logger.info(f"[workflow] State is not a dict, type: {type(s)}")
+                if isinstance(s, dict) and "final_report" in s and s["final_report"]:
+                    logger.info("[workflow] Yielding final report")
+                    yield {
+                        "type": "final_report",
+                        "content": s["final_report"]
+                    }
 
             except Exception as e:
                 logger.exception("[workflow] Exception in stream loop")
                 yield {"type": "error", "content": str(e)}
         
-        # Log that stream has ended
-        logger.info(f"=== WORKFLOW STREAM ENDED ===")
-        logger.info(f"[workflow] Stream ended. Total messages yielded: {last_message_cnt}")
-        logger.info(f"[workflow] Final yielded_steps: {yielded_steps}")
-        logger.info(f"[workflow] Current plan yielded: {current_plan_yielded}")
-
+        logger.info(f"=== WORKFLOW COMPLETED ===")
+        
     except Exception as e:
-        logger.error(f"[workflow] Workflow error: {str(e)}")
-        yield {"type": "error", "content": str(e)}
+        error_msg = str(e)
+        if "recursion limit" in error_msg.lower():
+            logger.warning(f"[workflow] Recursion limit reached: {error_msg}")
+            # Call reporter directly with the last known state
+            final_report = await handle_recursion_limit(last_state, config)
+            yield {
+                "type": "final_report",
+                "content": final_report
+            }
+        else:
+            logger.error(f"[workflow] Workflow error: {str(e)}")
+            yield {"type": "error", "content": str(e)}
 
 if __name__ == "__main__":
     print(graph.get_graph(xray=True).draw_mermaid())

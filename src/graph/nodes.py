@@ -245,15 +245,6 @@ def human_feedback_node(
         print("\n" + "="*50)
         print("PLAN REVIEW REQUIRED")
         print("="*50)
-        # print("Current plan:")
-        # if hasattr(current_plan, 'title'):
-        #     print(f"Title: {current_plan.title}")
-        # if hasattr(current_plan, 'thought'):
-        #     print(f"Thought: {current_plan.thought}")
-        # if hasattr(current_plan, 'steps'):
-        #     print("Steps:")
-        #     for i, step in enumerate(current_plan.steps, 1):
-        #         print(f"  {i}. {step.title}")
         print("="*50)
         print("Options:")
         print("  [ACCEPTED] - Accept the plan and continue")
@@ -485,7 +476,7 @@ async def researcher_node(
     logger.info("Researcher node is researching.")
     configurable = Configuration.from_runnable_config(config)
     research_tools = [openai_search_tool, litesense_tool, crawl_tool]
-    # [get_boxed_warning_info_by_drug_name]
+
     return await _setup_and_execute_agent_step(
         state,
         config,

@@ -14,7 +14,7 @@ cp conf.yaml.example conf.yaml
 In MedDR, currently we only support non-reasoning models, which means models like OpenAI's o1/o3 or DeepSeek's R1 are not supported yet, but we will add support for them in the future.
 
 ### Supported Models
-`gpt-4o`, `qwen-max-latest`, `gemini-2.0-flash`, `deepseek-v3`, and theoretically any other non-reasoning chat models that implement the OpenAI API specification.
+`gpt-4o`, `o1`, `o3`, and theoretically any other non-reasoning chat models that implement the OpenAI API specification.
 
 > [!NOTE]
 > The Deep Research process requires the model to have a **longer context window**, which is not supported by all models.
