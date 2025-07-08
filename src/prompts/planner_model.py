@@ -1,6 +1,3 @@
-# The project is built upon Bytedance MedDR
-# SPDX-License-Identifier: MIT
-
 from enum import Enum
 from typing import List, Optional
 

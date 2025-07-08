@@ -1,7 +1,5 @@
-# The project is built upon Bytedance MedDR
-# SPDX-License-Identifier: MIT
-
 from typing import Literal
+from enum import Enum
 
 # Define available LLM types
 LLMType = Literal["basic", "reasoning"]

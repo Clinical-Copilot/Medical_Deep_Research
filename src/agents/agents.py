@@ -1,7 +1,5 @@
-# The project is built upon Bytedance MedDR
-# SPDX-License-Identifier: MIT
-
 from langgraph.prebuilt import create_react_agent
+from typing import Any, Dict, List, Optional
 
 from src.prompts import apply_prompt_template
 from src.llms.llm import get_llm_by_type

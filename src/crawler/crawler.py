@@ -1,7 +1,5 @@
-# The project is built upon Bytedance MedDR
-# SPDX-License-Identifier: MIT
-
 import sys
+import requests
 
 from .article import Article
 from .jina_client import JinaClient

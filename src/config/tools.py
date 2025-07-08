@@ -1,9 +1,7 @@
-# The project is built upon Bytedance MedDR
-# SPDX-License-Identifier: MIT
-
 import os
 import enum
 from dotenv import load_dotenv
+from typing import Dict, Any
 
 load_dotenv()
 

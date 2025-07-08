@@ -1,12 +1,10 @@
-# The project is built upon Bytedance MedDR
-# SPDX-License-Identifier: MIT
-
 """
 Entry point script for the DeerFlow project.
 """
 
 import argparse
 import asyncio
+import sys
 
 from InquirerPy import inquirer
 

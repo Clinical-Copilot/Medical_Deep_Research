@@ -1,6 +1,3 @@
-# The project is built upon Bytedance MedDR
-# SPDX-License-Identifier: MIT
-
 import pytest
 from src.prompts.template import get_prompt_template, apply_prompt_template
 

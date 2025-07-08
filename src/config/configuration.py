@@ -1,6 +1,3 @@
-# The project is built upon Bytedance MedDR
-# SPDX-License-Identifier: MIT
-
 import os
 from dataclasses import dataclass, fields
 from typing import Any, Optional

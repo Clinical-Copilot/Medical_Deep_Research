@@ -1,11 +1,9 @@
-# The project is built upon Bytedance MedDR
-# SPDX-License-Identifier: MIT
-
 import logging
 from typing import Annotated
 from langchain_core.tools import tool
 from langchain_experimental.utilities import PythonREPL
 from .decorators import log_io
+import code
 
 # Initialize REPL and logger
 repl = PythonREPL()

@@ -1,6 +1,3 @@
-# The project is built upon Bytedance MedDR
-# SPDX-License-Identifier: MIT
-
 """
 Built-in questions.
 """
@@ -11,3 +8,5 @@ BUILT_IN_QUESTIONS = [
     "How is machine learning transforming the biomedical industry?",
     "How could MCP enhances healthcare industry?",
 ]
+
+from typing import List, Dict

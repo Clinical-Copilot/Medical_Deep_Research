@@ -1,10 +1,8 @@
-# # The project is built upon Bytedance MedDR
-# # SPDX-License-Identifier: MIT
-
 import logging
 import sys
 import os
 from typing import Annotated, Optional
+import requests
 
 from langchain_core.tools import tool
 from .decorators import log_io

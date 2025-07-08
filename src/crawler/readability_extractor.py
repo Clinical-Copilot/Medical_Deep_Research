@@ -1,7 +1,5 @@
-# The project is built upon Bytedance MedDR
-# SPDX-License-Identifier: MIT
-
 from readabilipy import simple_json_from_html_string
+import re
 
 from .article import Article
 

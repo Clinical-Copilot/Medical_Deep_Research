@@ -1,8 +1,6 @@
-# The project is built upon Bytedance MedDR
-# SPDX-License-Identifier: MIT
-
 from langgraph.graph import StateGraph, START, END
 from langgraph.checkpoint.memory import MemorySaver
+from typing import Any, Dict, List, Optional
 
 from .types import State
 from .nodes import (

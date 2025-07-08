@@ -1,10 +1,8 @@
 # Simple tool for google search and google scholar search
 
-# The project is built upon Bytedance MedDR
-# SPDX-License-Identifier: MIT
-
 import os
 import logging
+import requests
 
 from scholarly import scholarly
 from typing import Annotated, Dict, Any

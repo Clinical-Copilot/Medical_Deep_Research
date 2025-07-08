@@ -1,6 +1,3 @@
-# The project is built upon Bytedance MedDR
-# SPDX-License-Identifier: MIT
-
 from .tools import SELECTED_SEARCH_ENGINE, SearchEngine
 from .loader import load_yaml_config
 from .questions import BUILT_IN_QUESTIONS

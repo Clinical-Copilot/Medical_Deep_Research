@@ -1,6 +1,3 @@
-# The project is built upon Bytedance MedDR
-# SPDX-License-Identifier: MIT
-
 import operator
 from typing import Annotated, TypedDict, List, Dict, Any, Optional
 

@@ -1,6 +1,3 @@
-# The project is built upon Bytedance MedDR
-# SPDX-License-Identifier: MIT
-
 import logging
 from datetime import timedelta
 from typing import Any, Dict, List, Optional, Tuple

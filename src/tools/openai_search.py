@@ -1,6 +1,3 @@
-# The project is built upon Bytedance MedDR
-# SPDX-License-Identifier: MIT
-
 import logging
 import os
 import re
@@ -11,6 +8,7 @@ from dotenv import load_dotenv
 from langchain_core.tools import tool
 from src.tools.decorators import process_queries, log_io_with_events
 from src.utils.query_processor import QueryStrategy
+import openai
 
 load_dotenv()
 logger = logging.getLogger(__name__)
