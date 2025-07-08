@@ -129,8 +129,6 @@ Medical Deep Research builds upon the incredible work of the open-source communi
 
 ## ⚠️ Important Notes
 
-> **🚧 Development Status**: This project is currently under active development and may contain experimental features.
-
-> **🔍 Content Verification**: While the system strives for accuracy, all generated content should be verified by qualified medical professionals before clinical use.
+> **🚧 Development Status**: This project is currently under active development.
 
 > **📚 Research Tool**: This system is designed as a research and decision-support tool, not a replacement for professional medical judgment.
