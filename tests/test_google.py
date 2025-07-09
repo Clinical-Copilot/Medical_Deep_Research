@@ -1,9 +1,8 @@
 import os
 from googleapiclient.discovery import build
 
-# Replace with your actual API key and Search Engine ID
-API_KEY = "AIzaSyBPxGtYEt1HATWYFqDjdtfnyVbMhG0h0X8"
-SEARCH_ENGINE_ID = "30962071ae36247c2"
+API_KEY = os.getenv("GOOGLE_API_KEY")
+SEARCH_ENGINE_ID = os.getenv("GOOGLE_SEARCH_ENGINE_ID")
 
 def Google_Search(query, num_results=10, start_index=1):
     """
