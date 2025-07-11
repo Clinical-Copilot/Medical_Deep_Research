@@ -1,7 +1,3 @@
-"""
-Server script for running the DeerFlow API.
-"""
-
 import argparse
 import logging
 import signal
@@ -29,7 +25,7 @@ signal.signal(signal.SIGINT, handle_shutdown)
 
 if __name__ == "__main__":
     # Parse command line arguments
-    parser = argparse.ArgumentParser(description="Run the DeerFlow API server")
+    parser = argparse.ArgumentParser(description="Run the API server")
     parser.add_argument(
         "--reload",
         action="store_true",
