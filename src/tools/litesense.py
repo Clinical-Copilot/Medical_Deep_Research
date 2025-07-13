@@ -14,11 +14,10 @@ logger = logging.getLogger(__name__)
 #  1. Try to improve the description of the tool (the current version might not be accurate)
 #  2. wrapper
 #  3. Try use the entire paper?
-
+# @process_queries(strategy=QueryStrategy.LITESENSE, max_variations=3)
 
 @tool
 @log_io
-@process_queries(strategy=QueryStrategy.LITESENSE, max_variations=3)
 async def litesense_tool(
     query: Annotated[
         str, "Free-text biomedical query (keywords, phrase, or question)."
