@@ -121,8 +121,13 @@ async def handle_recursion_limit(state, config):
     logger.info("[workflow] Recursion limit reached, calling reporter directly")
     try:
         result = reporter_node(state, config)
-        if hasattr(result, 'value') and isinstance(result.value, dict):
-            return result.value.get("final_report", "")
+        
+        # Apply the Command's update to the state to get the final_report
+        if hasattr(result, 'update') and isinstance(result.update, dict):
+            # Apply the update to the state (simulating what the graph framework does)
+            updated_state = state.copy()
+            updated_state.update(result.update)
+            return updated_state.get("final_report", "")
         elif isinstance(result, dict):
             return result.get("final_report", "")
         else:
@@ -176,7 +181,7 @@ async def run_agent_workflow_async(
                 "servers": mcp_servers
             },
         },
-        "recursion_limit": 20,
+        "recursion_limit": 15,
     }
 
     last_message_cnt = 0

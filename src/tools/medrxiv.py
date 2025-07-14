@@ -1,11 +1,11 @@
 import logging
 import asyncio
 import requests
-from bs4 import BeautifulSoup
-from datetime import datetime
 import re
 import urllib.parse
 import time
+from bs4 import BeautifulSoup
+from datetime import datetime
 from typing import Annotated
 
 from langchain_core.tools import tool

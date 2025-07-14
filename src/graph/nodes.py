@@ -505,10 +505,31 @@ def reporter_node(state: State, config: RunnableConfig = None):
     configurable = Configuration.from_runnable_config(config) if config else Configuration()
     output_format = configurable.output_format
     
+    # Handle both Plan object and string types for current_plan
+    if hasattr(current_plan, 'title') and hasattr(current_plan, 'thought'):
+        # It's a Plan object
+        title = current_plan.title
+        thought = current_plan.thought
+    elif isinstance(current_plan, str):
+        # It's a string, try to parse it as JSON
+        try:
+            import json
+            plan_data = json.loads(current_plan)
+            title = plan_data.get('title', 'Research Task')
+            thought = plan_data.get('thought', 'No detailed thought process available')
+        except (json.JSONDecodeError, TypeError):
+            # If parsing fails, use the string as is
+            title = 'Research Task'
+            thought = current_plan
+    else:
+        # Fallback for unknown types
+        title = 'Research Task'
+        thought = 'No detailed thought process available'
+    
     input_ = {
         "messages": [
             HumanMessage(
-                f"# Research Requirements\n\n## Task\n\n{current_plan.title}\n\n## Description\n\n{current_plan.thought}"
+                f"# Research Requirements\n\n## Task\n\n{title}\n\n## Description\n\n{thought}"
             )
         ],
     }

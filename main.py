@@ -12,9 +12,33 @@ from src.config.questions import BUILT_IN_QUESTIONS
 from src.workflow import run_agent_workflow_async
 
 
+async def run_workflow_and_print(
+    question,
+    max_plan_iterations=1,
+    max_step_num=3,
+    output_format="long-report",
+    human_feedback=False,
+):
+    """Run the agent workflow and print results."""
+    async for result in run_agent_workflow_async(
+        user_input=question,
+        max_plan_iterations=max_plan_iterations,
+        max_step_num=max_step_num,
+        output_format=output_format,
+        human_feedback=human_feedback,
+    ):
+        if result.get("type") == "final_report":
+            print("\n" + "="*50)
+            print("FINAL REPORT")
+            print("="*50)
+            print(result.get("content", ""))
+        elif result.get("type") == "error":
+            print(f"Error: {result.get('content', '')}")
+        else:
+            print(f"Progress: {result.get('content', '')}")
+
 def ask(
     question,
-    debug=False,
     max_plan_iterations=1,
     max_step_num=3,
     output_format="long-report",
@@ -24,16 +48,14 @@ def ask(
 
     Args:
         question: The user's query or request
-        debug: If True, enables debug level logging
         max_plan_iterations: Maximum number of plan iterations
         max_step_num: Maximum number of steps in a plan
         output_format: Output format - "long-report", "short-report", or custom requirements (default: "long-report")
         human_feedback: Whether to require human feedback on plans (default: False for auto-accept)
     """
     asyncio.run(
-        run_agent_workflow_async(
-            user_input=question,
-            debug=debug,
+        run_workflow_and_print(
+            question=question,
             max_plan_iterations=max_plan_iterations,
             max_step_num=max_step_num,
             output_format=output_format,
@@ -43,7 +65,7 @@ def ask(
 
 
 def main(
-    debug=False, max_plan_iterations=1, max_step_num=3, output_format="long-report", human_feedback=False
+    max_plan_iterations=1, max_step_num=3, output_format="long-report", human_feedback=False
 ):
     """Interactive mode with built-in questions.
 
@@ -72,7 +94,6 @@ def main(
     # Pass all parameters to ask function
     ask(
         question=initial_question,
-        debug=debug,
         max_plan_iterations=max_plan_iterations,
         max_step_num=max_step_num,
         output_format=output_format,
@@ -118,7 +139,6 @@ if __name__ == "__main__":
     if args.interactive:
         # Pass command line arguments to main function
         main(
-            debug=args.debug,
             max_plan_iterations=args.max_plan_iterations,
             max_step_num=args.max_step_num,
             output_format=args.output_format,
@@ -134,7 +154,6 @@ if __name__ == "__main__":
         # Run the agent workflow with the provided parameters
         ask(
             question=user_query,
-            debug=args.debug,
             max_plan_iterations=args.max_plan_iterations,
             max_step_num=args.max_step_num,
             output_format=args.output_format,
