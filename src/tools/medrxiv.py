@@ -1,11 +1,22 @@
+import logging
+import asyncio
 import requests
 from bs4 import BeautifulSoup
 from datetime import datetime
 import re
 import urllib.parse
 import time
+from typing import Annotated
+
+from langchain_core.tools import tool
+from .decorators import log_io
+from src.llms.llm import get_llm_by_type
+
+logger = logging.getLogger(__name__)
+
 
 def parse_query(query: str, model) -> str:
+    """Parse a natural language query into searchable keywords for MedRxiv."""
     prompt = f"""
         You are helping prepare search queries for a biomedical literature retrieval system (medRxiv).
 
@@ -19,19 +30,18 @@ def parse_query(query: str, model) -> str:
     keywords = response.content.strip().replace(",", " ").split()
     return "+".join(keywords)
 
-import re
 
 def clean_author_text(raw_text):
+    """Clean and format author text from MedRxiv."""
     cleaned = re.sub(r"(View ORCID Profile)+", "", raw_text)
     cleaned = re.sub(r"(?<=[a-z])(?=[A-Z])", " ", cleaned)
     cleaned = re.sub(r"(?<=[A-Z])\.?(?=[A-Z][a-z])", ". ", cleaned)
     cleaned = re.sub(r"\s+", " ", cleaned)
-
     return cleaned.strip()
 
 
-
 def search_medrxiv(query: str, model, max_results=10):
+    """Search MedRxiv for biomedical preprints based on the given query."""
     keywords = parse_query(query, model)
     encoded_query = urllib.parse.quote(keywords)
     search_url = f"https://www.medrxiv.org/search/{encoded_query}%20numresults%3A{max_results}%20sort%3Arelevance-rank"
@@ -94,6 +104,46 @@ def search_medrxiv(query: str, model, max_results=10):
             })
 
         except Exception as e:
-            print(f"[WARN] Skipping article due to parsing error: {e}")
+            logger.warning(f"Skipping article due to parsing error: {e}")
 
     return results
+
+
+@tool
+@log_io
+async def medrxiv_tool(
+    query: Annotated[
+        str,
+        "Free-text biomedical query (question, phrase, or research plan). Will be parsed into keyword search for MedRxiv.",
+    ],
+) -> str:
+    """
+    MedRxiv Preprint Search Tool
+    - Uses an LLM to extract keywords from a natural-language query
+    - Scrapes medRxiv.org for recent biomedical preprints
+    - Returns paper title, abstract snippet, link, and publication date
+    """
+    try:
+        llm = get_llm_by_type("basic")
+
+        loop = asyncio.get_event_loop()
+        results = await loop.run_in_executor(None, lambda: search_medrxiv(query, model=llm))
+
+        if not results:
+            return "No MedRxiv preprints found for this query."
+
+        output = "\n\n".join(
+            f"**{i+1}. {r['title']}**\n"
+            f"*Authors:* {r['authors']}  \n"
+            f"*Date:* {r['date']}  \n"
+            f"{r['abstract']}...\n"
+            f"[Read more]({r['link']})"
+            for i, r in enumerate(results[:5])
+        )
+
+        return output
+
+    except Exception as e:
+        error_msg = f"MedRxiv tool error: {str(e)}"
+        logger.error(error_msg)
+        return error_msg 
