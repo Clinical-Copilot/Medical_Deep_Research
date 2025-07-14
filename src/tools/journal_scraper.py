@@ -1,5 +1,6 @@
 import pandas as pd
 import json
+from collections import OrderedDict
 
 # SJR category IDs (biomedical/medical):
 # 2204=Biomedical Engineering, 1306=Cancer Research, 1308=Clinical Biochemistry, 1309=Developmental Biology, 1313=Molecular Medicine, 2403=Immunology, 2404=Microbiology, 2406=Virology, 2502=Biomaterials, 2700=General Medicine, 2701=Medicine (misc), 2704=Biochemistry (medical), 2705=Cardiology, 2706=Critical Care, 2712=Endocrinology, 2713=Epidemiology, 2716=Genetics (clinical), 2720=Hematology, 2725=Infectious Diseases, 2728=Neurology (clinical), 2730=Oncology, 2735=Pediatrics, 2736=Pharmacology (medical), 2737=Physiology (medical), 2738=Psychiatry, 2739=Public Health, 2746=Surgery, 2800=Neuroscience, 3002=Drug Discovery, 3003=Pharmaceutical Science, 3004=Pharmacology, 3005=Toxicology
@@ -31,8 +32,10 @@ for category_id in category_ids:
         else:
             journal_impact[name] = sjr
 
+sorted_journals = OrderedDict(sorted(journal_impact.items(), key=lambda x: x[1], reverse=True))
+
 output_path = 'biomedical_journals.json'
 with open(output_path, 'w') as f:
-    json.dump(journal_impact, f, indent=2)
+    json.dump(sorted_journals, f, indent=2)
 
-print(f"Saved {len(journal_impact)} unique journals to {output_path}")
+print(f"Saved {len(sorted_journals)} unique journals to {output_path}")
