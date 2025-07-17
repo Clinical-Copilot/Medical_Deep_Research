@@ -40,7 +40,25 @@ def clean_author_text(raw_text):
     return cleaned.strip()
 
 
-def search_medrxiv(query: str, model, max_results=10):
+def extract_full_text_sections(soup: BeautifulSoup) -> str:
+    """Extract all section headings and paragraphs from the full-text version of the article except for the abstract."""
+    sections = []
+    for div in soup.find_all("div", class_="section"):
+        heading = div.find(["h2", "h3"])
+        heading_text = heading.get_text(strip=True) if heading else "Section"
+
+        if heading_text.lower().startswith("abstract"):
+            continue
+
+        paragraphs = div.find_all("p")
+        body = " ".join(p.get_text(strip=True) for p in paragraphs)
+        body = re.sub(r"\s+", " ", body)
+        sections.append(f"--- {heading_text} ---\n{body}")
+    return "\n\n".join(sections).strip()
+
+
+
+def search_medrxiv(query: str, model, max_results=1):
     """Search MedRxiv for biomedical preprints based on the given query."""
     keywords = parse_query(query, model)
     encoded_query = urllib.parse.quote(keywords)
@@ -61,11 +79,12 @@ def search_medrxiv(query: str, model, max_results=10):
                 continue
 
             title = title_tag.text.strip()
-            link = "https://www.medrxiv.org" + title_tag.find("a")["href"]
+            base_link = "https://www.medrxiv.org" + title_tag.find("a")["href"]
+            full_link = base_link + ".full"
 
-            # Fetch article page
+            # Fetch full text page
             time.sleep(0.5)
-            article_page = requests.get(link)
+            article_page = requests.get(full_link)
             article_soup = BeautifulSoup(article_page.text, "html.parser")
 
             # Authors
@@ -85,7 +104,7 @@ def search_medrxiv(query: str, model, max_results=10):
             # Date
             date = None
             for div in article_soup.find_all("div", class_="pane-content"):
-                text = div.get_text(separator=" ", strip=True)  # normalize spacing
+                text = div.get_text(separator=" ", strip=True)
                 match = re.search(r"Posted\s+([A-Za-z]+\s+\d{1,2},\s+\d{4})", text)
                 if match:
                     try:
@@ -95,12 +114,16 @@ def search_medrxiv(query: str, model, max_results=10):
                     except Exception:
                         continue
 
+            # Full text
+            full_text = extract_full_text_sections(article_soup)
+
             results.append({
                 "title": title,
-                "link": link,
+                "link": base_link,
                 "abstract": abstract,
                 "authors": authors,
-                "date": date
+                "date": date,
+                "full_text": full_text
             })
 
         except Exception as e:
@@ -133,11 +156,12 @@ async def medrxiv_tool(
             return "No MedRxiv preprints found for this query."
 
         output = "\n\n".join(
+            f"Link:{r['link']}\n"
             f"**{i+1}. {r['title']}**\n"
             f"*Authors:* {r['authors']}  \n"
             f"*Date:* {r['date']}  \n"
             f"{r['abstract']}...\n"
-            f"[Read more]({r['link']})"
+            f"{r['full_text']}"
             for i, r in enumerate(results[:5])
         )
 
@@ -146,4 +170,4 @@ async def medrxiv_tool(
     except Exception as e:
         error_msg = f"MedRxiv tool error: {str(e)}"
         logger.error(error_msg)
-        return error_msg 
+        return error_msg
