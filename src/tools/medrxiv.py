@@ -94,6 +94,18 @@ def search_medrxiv(query: str, model, max_results=1):
                 for span in authors_tag.find_all("span", class_="highwire-citation-author")
             ]) if authors_tag else None
 
+            # Journal (try to extract, else blank)
+            journal = ""
+            # Try to find journal/source info
+            journal_tag = article_soup.find("span", class_="highwire-cite-metadata-journal")
+            if journal_tag:
+                journal = journal_tag.get_text(strip=True)
+            else:
+                # Sometimes in meta tag
+                meta_journal = article_soup.find("meta", attrs={"name": "citation_journal_title"})
+                if meta_journal and meta_journal.get("content"):
+                    journal = meta_journal["content"].strip()
+
             # Abstract
             abstract_div = article_soup.find("div", class_="section abstract")
             abstract = None
@@ -123,7 +135,8 @@ def search_medrxiv(query: str, model, max_results=1):
                 "abstract": abstract,
                 "authors": authors,
                 "date": date,
-                "full_text": full_text
+                "journal": journal,
+                # "full_text": full_text
             })
 
         except Exception as e:
@@ -159,9 +172,10 @@ async def medrxiv_tool(
             f"Link:{r['link']}\n"
             f"**{i+1}. {r['title']}**\n"
             f"*Authors:* {r['authors']}  \n"
+            f"*Journal:* {r['journal']}  \n"
             f"*Date:* {r['date']}  \n"
             f"{r['abstract']}...\n"
-            f"{r['full_text']}"
+            # f"{r['full_text']}"
             for i, r in enumerate(results[:5])
         )
 

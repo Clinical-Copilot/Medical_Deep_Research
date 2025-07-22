@@ -16,6 +16,7 @@ from src.tools import (
     crawl_tool,
     openai_search_tool,
     litesense_tool,
+    medrxiv_tool,
     python_repl_tool
     # get_boxed_warning_info_by_drug_name
 )
@@ -322,7 +323,6 @@ async def _execute_agent_step(
     current_plan = state.get("current_plan")
     observations = state.get("observations", [])
 
-    # Find the first unexecuted step
     current_step = None
     completed_steps = []
     for step in current_plan.steps:
@@ -338,7 +338,6 @@ async def _execute_agent_step(
 
     logger.info(f"Executing step: {current_step.title}")
 
-    # Format completed steps information
     completed_steps_info = ""
     if completed_steps:
         completed_steps_info = "# Existing Research Findings\n\n"
@@ -346,7 +345,6 @@ async def _execute_agent_step(
             completed_steps_info += f"## Existing Finding {i+1}: {step.title}\n\n"
             completed_steps_info += f"<finding>\n{step.execution_res}\n</finding>\n\n"
 
-    # Prepare the input for the agent with completed steps info
     agent_input = {
         "messages": [
             HumanMessage(
@@ -359,7 +357,7 @@ async def _execute_agent_step(
     if agent_name == "researcher":
         agent_input["messages"].append(
             HumanMessage(
-                content="IMPORTANT: Use inline citations and a final \"### References\" section.  \nInline citations – place [tag] immediately after each claim; tag = first author's surname (or first significant title word if no author) + last two digits of year, e.g. [smith24]; add \"-a\", \"-b\"... if needed to keep tags unique; reuse the same tag for repeat citations.  \nReferences – append \"### References\" after the text; list every unique tag in the order it first appears, one per line with a blank line between, formatted **[tag]** [Full Source Title](URL). Show URLs only here.  \nNo other citation style.",
+                content="IMPORTANT: Use inline citations and a final \"### References\" section.  \nInline citations – place [tag] immediately after each claim; tag = first author's surname (or first significant title word if no author) + last two digits of year, e.g. [smith24]; add \"-a\", \"-b\"... if needed to keep tags unique; reuse the same tag for repeat citations.  \nReferences – append \"### References\" after the text; list every unique tag in the order it first appears, one per line with a blank line between, formatted **[tag]** [Full Source Title](URL) | [Journal Name]. Show URLs only here. Leave journal blank if not available.  \nNo other citation style.",
                 name="system",
             )
         )
@@ -369,7 +367,6 @@ async def _execute_agent_step(
             logger.info(msg.content)
             logger.info("---")
 
-    # Invoke the agent
     default_recursion_limit = 20
     try:
         recursion_limit = int(os.getenv("AGENT_RECURSION_LIMIT", str(default_recursion_limit)))
@@ -386,9 +383,8 @@ async def _execute_agent_step(
         input=agent_input, config={"recursion_limit": recursion_limit}
     )
 
-    # Process the result
     response_content = result["messages"][-1].content
-    logger.debug(f"{agent_name.capitalize()} full response: {response_content}")
+    logger.info(f"{agent_name.capitalize()} full response: {response_content}")
 
     # Update the step with the execution result
     current_step.execution_res = response_content
@@ -435,18 +431,19 @@ async def _setup_and_execute_agent_step(
 
     # Extract MCP server configuration for this agent type
     if configurable.mcp_settings:
-        for server_name, server_config in configurable.mcp_settings["servers"].items():
-            if (
-                server_config["enabled_tools"]
-                and agent_type in server_config["add_to_agents"]
-            ):
-                mcp_servers[server_name] = {
-                    k: v
-                    for k, v in server_config.items()
-                    if k in ("transport", "command", "args", "url", "env")
-                }
-                for tool_name in server_config["enabled_tools"]:
-                    enabled_tools[tool_name] = server_name
+        pass
+        # for server_name, server_config in configurable.mcp_settings["servers"].items():
+        #     if (
+        #         server_config["enabled_tools"]
+        #         and agent_type in server_config["add_to_agents"]
+        #     ):
+        #         mcp_servers[server_name] = {
+        #             k: v
+        #             for k, v in server_config.items()
+        #             if k in ("transport", "command", "args", "url", "env")
+        #         }
+        #         for tool_name in server_config["enabled_tools"]:
+        #             enabled_tools[tool_name] = server_name
  
     if mcp_servers:
         client = MultiServerMCPClient(mcp_servers)
@@ -472,7 +469,7 @@ async def researcher_node(
     """Researcher node that do research"""
     logger.info("Researcher node is researching.")
     configurable = Configuration.from_runnable_config(config)
-    research_tools = [openai_search_tool, litesense_tool, crawl_tool]
+    research_tools = [crawl_tool, medrxiv_tool]
 
     return await _setup_and_execute_agent_step(
         state,
@@ -501,28 +498,22 @@ def reporter_node(state: State, config: RunnableConfig = None):
     logger.info("Reporter write final report")
     current_plan = state.get("current_plan")
     
-    # Get configuration
     configurable = Configuration.from_runnable_config(config) if config else Configuration()
     output_format = configurable.output_format
     
-    # Handle both Plan object and string types for current_plan
     if hasattr(current_plan, 'title') and hasattr(current_plan, 'thought'):
-        # It's a Plan object
         title = current_plan.title
         thought = current_plan.thought
     elif isinstance(current_plan, str):
-        # It's a string, try to parse it as JSON
         try:
             import json
             plan_data = json.loads(current_plan)
             title = plan_data.get('title', 'Research Task')
             thought = plan_data.get('thought', 'No detailed thought process available')
         except (json.JSONDecodeError, TypeError):
-            # If parsing fails, use the string as is
             title = 'Research Task'
             thought = current_plan
     else:
-        # Fallback for unknown types
         title = 'Research Task'
         thought = 'No detailed thought process available'
     
@@ -574,13 +565,12 @@ def reporter_node(state: State, config: RunnableConfig = None):
     
     observations = state.get("observations", [])
 
-    # Add format-specific reminder
     if output_format == "short-report":
         format_reminder = "IMPORTANT: Provide a concise answer with key points only. Focus on the most essential findings in 2-3 sentences. Be direct and to the point."
     elif output_format not in ["long-report", "short-report"]:
         format_reminder = f"IMPORTANT: Follow the dynamically generated prompt above. The user's original requirements were: '{output_format}'. Ensure the report matches these requirements while maintaining professional standards and proper citations."
     else:  # long-report (default)
-        format_reminder = "IMPORTANT: Structure your report according to the format in the prompt. Remember to include:\n\n1. Key Points - A bulleted list of the most important findings\n2. Overview - A brief introduction to the topic\n3. Detailed Analysis - Organized into logical sections\n4. Survey Note (optional) - For more comprehensive reports\n5. Key Citations - List all references at the end\n\nFor citations, DO NOT include inline citations in the text. Instead, place all citations in the 'Key Citations' section at the end using the format: `- [Source Title](URL)`. Include an empty line between each citation for better readability.\n\nPRIORITIZE USING MARKDOWN TABLES for data presentation and comparison. Use tables whenever presenting comparative data, statistics, features, or options. Structure tables with clear headers and aligned columns. Example table format:\n\n| Feature | Description | Pros | Cons |\n|---------|-------------|------|------|\n| Feature 1 | Description 1 | Pros 1 | Cons 1 |\n| Feature 2 | Description 2 | Pros 2 | Cons 2 |"
+        format_reminder = ""
 
     invoke_messages.append(
         HumanMessage(

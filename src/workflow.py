@@ -140,23 +140,21 @@ async def handle_recursion_limit(state, config):
 async def run_agent_workflow_async(
     user_input: str,
     max_plan_iterations: int = 1,
-    max_step_num: int = 3,  # Reduced to prevent deep recursion
+    max_step_num: int = 3, 
     output_format: str = "long-report",
-    human_feedback: bool = False,  # Whether to require human feedback (default: False for auto-accept)
+    human_feedback: bool = False, 
 ):
     if not user_input:
         raise ValueError("Input could not be empty")
 
-    logger.info(f"[workflow] Starting workflow with query: {user_input[:100]}...")
+    logger.info(f"[workflow] Starting workflow with query: {user_input}")
     
-    # Store reference to yielder for tool events
     tool_events_queue = asyncio.Queue()
     
     async def tool_event_handler(event):
         """Handle tool events and add them to queue for yielding."""
         await tool_events_queue.put(event)
     
-    # Set up tool event callback
     set_tool_event_callback(tool_event_handler)
     
     initial_state = {
@@ -168,7 +166,6 @@ async def run_agent_workflow_async(
         "final_report": ""  # Initialize final report
     }
     
-    # Load MCP servers configuration
     mcp_servers = load_mcp_config()
 
     config = {
@@ -190,16 +187,13 @@ async def run_agent_workflow_async(
 
     logger.info("=== WORKFLOW STARTING ===")
     
-    # Track the last state for recursion limit handling
     last_state = initial_state
     
     try:
         async for s in graph.astream(input=initial_state, config=config, stream_mode="values"):
-            # Update last state for potential recursion limit handling
             last_state = s
             
             try:
-                # Check for any tool events first
                 while not tool_events_queue.empty():
                     try:
                         tool_event = tool_events_queue.get_nowait()
@@ -218,13 +212,11 @@ async def run_agent_workflow_async(
                 if isinstance(s, dict) and not current_plan_yielded and "current_plan" in s and s["current_plan"]:
                     raw_plan = s["current_plan"]
 
-                    # Handle nested "planner_output" if it exists
                     if isinstance(raw_plan, dict) and "planner_output" in raw_plan:
                         raw_plan = raw_plan["planner_output"]
 
                     serialized_plan = serialize_plan(raw_plan)
 
-                    # Only yield plan if it's not an error
                     if not (isinstance(serialized_plan, dict) and "error" in serialized_plan):
                         yield {"type": "plan", "content": serialized_plan}
                         current_plan_yielded = True
@@ -249,7 +241,6 @@ async def run_agent_workflow_async(
                                 }
                                 yielded_steps.add(step_title)
 
-                # Check for final report
                 if isinstance(s, dict) and "final_report" in s and s["final_report"]:
                     logger.info("[workflow] Yielding final report")
                     yield {
@@ -267,7 +258,6 @@ async def run_agent_workflow_async(
         error_msg = str(e)
         if "recursion limit" in error_msg.lower():
             logger.warning(f"[workflow] Recursion limit reached: {error_msg}")
-            # Call reporter directly with the last known state
             final_report = await handle_recursion_limit(last_state, config)
             yield {
                 "type": "final_report",

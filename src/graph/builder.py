@@ -33,18 +33,14 @@ def _build_base_graph():
 
 def build_graph_with_memory():
     """Build and return the agent workflow graph with memory."""
-    # use persistent memory to save conversation history
-    # TODO: be compatible with SQLite / PostgreSQL
     memory = MemorySaver()
 
-    # build state graph
     builder = _build_base_graph()
     return builder.compile(checkpointer=memory)
 
 
 def build_graph():
     """Build and return the agent workflow graph without memory."""
-    # build state graph
     builder = _build_base_graph()
     return builder.compile()
 

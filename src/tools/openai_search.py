@@ -110,9 +110,25 @@ async def openai_search_tool(
         urls = _extract_urls_from_metadata(msg) or _extract_urls_from_text(answer)
         urls = _clean_urls(urls)
 
+        # Try to extract journal name from answer (improved heuristic)
+        journal = ""
+        patterns = [
+            r'Published in: ([^\n]+)',
+            r'Journal: ([^\n]+)',
+            r'Published by ([^\n]+)',
+            r'Source: ([^\n]+)',
+            r'In: ([^\n]+)'
+        ]
+        for pat in patterns:
+            match = re.search(pat, answer)
+            if match:
+                journal = match.group(1).strip()
+                break
+
         return {
             "query": query,
             "answer": answer,
+            "journal": journal,
             "urls": urls
         }
 

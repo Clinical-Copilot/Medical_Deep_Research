@@ -64,7 +64,7 @@ Structure your report in the following format:
 6. **References**
    - List all references at the end in numbered reference format.
    - Include an empty line between each citation for better readability.
-   - Format: `[number] Name of the source/paper title (URL if available)`
+   - Format: `[number] Name of the source/paper title (URL if available) | [Journal Name]` (leave journal blank if not available)
    - List every unique source in order of first appearance.
 
 # Citation Format
@@ -78,7 +78,7 @@ Structure your report in the following format:
 
 **Example:**
 - Inline citation: "Aspirin was discovered in 1897 [1] and has been widely used for pain relief."
-- Reference section: `[1] The Discovery of Aspirin (https://example.com/aspirin-discovery)`
+- Reference section: `[1] The Discovery of Aspirin (https://example.com/aspirin-discovery) | Nature`
 
 **Number Alignment Rules:**
 - The number in `[1]` must be identical in both the inline citation and the reference
