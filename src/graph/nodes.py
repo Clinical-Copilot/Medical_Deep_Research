@@ -323,20 +323,15 @@ async def _execute_agent_step(
     current_plan = state.get("current_plan")
     observations = state.get("observations", [])
 
-    current_step = None
-    completed_steps = []
-    for step in current_plan.steps:
-        if not step.execution_res:
-            current_step = step
-            break
-        else:
-            completed_steps.append(step)
+    # Find all unexecuted steps
+    unexecuted_steps = [step for step in current_plan.steps if not step.execution_res]
+    completed_steps = [step for step in current_plan.steps if step.execution_res]
 
-    if not current_step:
+    if not unexecuted_steps:
         logger.warning("No unexecuted step found")
         return Command(goto="research_team")
 
-    logger.info(f"Executing step: {current_step.title}")
+    logger.info(f"Executing {len(unexecuted_steps)} step(s) in parallel.")
 
     completed_steps_info = ""
     if completed_steps:
@@ -345,60 +340,53 @@ async def _execute_agent_step(
             completed_steps_info += f"## Existing Finding {i+1}: {step.title}\n\n"
             completed_steps_info += f"<finding>\n{step.execution_res}\n</finding>\n\n"
 
-    agent_input = {
-        "messages": [
-            HumanMessage(
-                content=f"{completed_steps_info}# Current Task\n\n## Title\n\n{current_step.title}\n\n## Description\n\n{current_step.description}"
+    async def run_step(step):
+        agent_input = {
+            "messages": [
+                HumanMessage(
+                    content=f"{completed_steps_info}# Current Task\n\n## Title\n\n{step.title}\n\n## Description\n\n{step.description}"
+                )
+            ]
+        }
+        if agent_name == "researcher":
+            agent_input["messages"].append(
+                HumanMessage(
+                    content="IMPORTANT: Use inline citations and a final \"### References\" section.  \nInline citations – place [tag] immediately after each claim; tag = first author's surname (or first significant title word if no author) + last two digits of year, e.g. [smith24]; add \"-a\", \"-b\"... if needed to keep tags unique; reuse the same tag for repeat citations.  \nReferences – append \"### References\" after the text; list every unique tag in the order it first appears, one per line with a blank line between, formatted **[tag]** [Full Source Title](URL) | [Journal Name]. Show URLs only here. Leave journal blank if not available.  \nNo other citation style.",
+                    name="system",
+                )
             )
-        ]
-    }
-
-    # Add citation reminder for researcher agent
-    if agent_name == "researcher":
-        agent_input["messages"].append(
-            HumanMessage(
-                content="IMPORTANT: Use inline citations and a final \"### References\" section.  \nInline citations – place [tag] immediately after each claim; tag = first author's surname (or first significant title word if no author) + last two digits of year, e.g. [smith24]; add \"-a\", \"-b\"... if needed to keep tags unique; reuse the same tag for repeat citations.  \nReferences – append \"### References\" after the text; list every unique tag in the order it first appears, one per line with a blank line between, formatted **[tag]** [Full Source Title](URL) | [Journal Name]. Show URLs only here. Leave journal blank if not available.  \nNo other citation style.",
-                name="system",
-            )
-        )
-        logger.info("=== Researcher Input Messages ===")
-        for msg in agent_input["messages"]:
-            logger.info(f"Message from {msg.name if hasattr(msg, 'name') else 'user'}:")
-            logger.info(msg.content)
-            logger.info("---")
-
-    default_recursion_limit = 20
-    try:
-        recursion_limit = int(os.getenv("AGENT_RECURSION_LIMIT", str(default_recursion_limit)))
-        if recursion_limit <= 0:
-            logger.warning(f"AGENT_RECURSION_LIMIT must be positive, using default: {default_recursion_limit}")
+        default_recursion_limit = 20
+        try:
+            recursion_limit = int(os.getenv("AGENT_RECURSION_LIMIT", str(default_recursion_limit)))
+            if recursion_limit <= 0:
+                logger.warning(f"AGENT_RECURSION_LIMIT must be positive, using default: {default_recursion_limit}")
+                recursion_limit = default_recursion_limit
+            else:
+                logger.info(f"Recursion limit set to: {recursion_limit}")
+        except ValueError:
+            logger.warning(f"Invalid AGENT_RECURSION_LIMIT value, using default: {default_recursion_limit}")
             recursion_limit = default_recursion_limit
-        else:
-            logger.info(f"Recursion limit set to: {recursion_limit}")
-    except ValueError:
-        logger.warning(f"Invalid AGENT_RECURSION_LIMIT value, using default: {default_recursion_limit}")
-        recursion_limit = default_recursion_limit
+        result = await agent.ainvoke(
+            input=agent_input, config={"recursion_limit": recursion_limit}
+        )
+        response_content = result["messages"][-1].content
+        logger.info(f"{agent_name.capitalize()} full response: {response_content}")
+        step.execution_res = response_content
+        logger.info(f"Step '{step.title}' execution completed by {agent_name}")
+        return step.title, response_content
 
-    result = await agent.ainvoke(
-        input=agent_input, config={"recursion_limit": recursion_limit}
-    )
-
-    response_content = result["messages"][-1].content
-    logger.info(f"{agent_name.capitalize()} full response: {response_content}")
-
-    # Update the step with the execution result
-    current_step.execution_res = response_content
-    logger.info(f"Step '{current_step.title}' execution completed by {agent_name}")
+    # Run all unexecuted steps in parallel
+    await asyncio.gather(*(run_step(step) for step in unexecuted_steps))
 
     return Command(
         update={
             "messages": [
                 HumanMessage(
-                    content=response_content,
+                    content="\n".join([step.execution_res for step in unexecuted_steps]),
                     name=agent_name,
                 )
             ],
-            "observations": observations + [response_content],
+            "observations": observations + [step.execution_res for step in unexecuted_steps],
         },
         goto="research_team",
     )
