@@ -12,12 +12,7 @@ from src.config.agents import AGENT_LLM_MAP
 from src.tools import crawl_tool
 from src.tools.litesense import litesense_tool
 from src.tools.openai_search import openai_search_tool
-# from src.tools import get_drug_warnings_by_drug_name
-# from src.tools import (
-#     get_drug_warnings_by_drug_name,
-#     get_boxed_warning_info_by_drug_name,
-#     get_drug_names_by_controlled_substance_DEA_schedule,
-# )
+from src.tools import search_drug_warnings
 from langchain_mcp_adapters.client import MultiServerMCPClient
 from langgraph.prebuilt import create_react_agent
 
@@ -76,7 +71,7 @@ async def test_research():
 
 
     loaded_tools = [
-        openai_search_tool,
+        search_drug_warnings
     ]
 
     # Get tools from MCP servers
