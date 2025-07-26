@@ -64,7 +64,10 @@ Structure your report in the following format:
 6. **References**
    - List all references at the end in numbered reference format.
    - Include an empty line between each citation for better readability.
-   - Format: `[number] Name of the source/paper title (URL if available) | [Journal Name]` (leave journal blank if not available)
+   - **Reference Format**: `[number] Name of the source/paper title (URL if available)` - add ` | [Journal Name]` only if journal information is available
+   - **Examples**: 
+   - With journal: [1] The Discovery of Aspirin (https://example.com/aspirin-discovery) | Nature
+   - Without journal: [1] The Discovery of Aspirin (https://example.com/aspirin-discovery)
    - List every unique source in order of first appearance.
 
 # Citation Format

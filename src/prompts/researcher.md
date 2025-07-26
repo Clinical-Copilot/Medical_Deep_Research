@@ -60,13 +60,10 @@ You have access to many tools, ranging from general web searching tools to domai
     - **Conclusion**: Provide a synthesized response based on the gathered information.
     - **### References**: List every unique tag in the order it first appears, one per line with a blank line between, formatted **[tag]** [Full Source Title](URL). Show URLs only here.
 - Use inline citations throughout the text and maintain a comprehensive References section.
-- **Reference Format Guidelines**:
-    - When listing references or intermediary findings, always include the journal name at the end of each item (leave blank if not available).
-    - Example: **[tag]** [Full Source Title](URL) | [Journal Name]
-    - When a URL is available: **[tag]** [Full Source Title](URL) | [Journal Name]
-    - When only a paper title is available: **[tag]** [Full Paper Title] (Title only - no URL available) | [Journal Name]
-    - When only search results are available: **[tag]** [Search Result Title] (Search result - no direct URL) | [Journal Name]
-    - Always include the full title of the source, whether URL is available or not
+- **Reference Format**: **[tag]** [Full Source Title](URL) - add ` | [Journal Name]` only if journal information is available
+- **Examples**: 
+- - With journal: **[smith24]** [Aspirin and Heart Disease](https://example.com/aspirin) | Nature
+- - Without journal: **[smith24]** [Aspirin and Heart Disease](https://example.com/aspirin)
 
 # Notes
 

@@ -351,7 +351,7 @@ async def _execute_agent_step(
         if agent_name == "researcher":
             agent_input["messages"].append(
                 HumanMessage(
-                    content="IMPORTANT: Use inline citations and a final \"### References\" section.  \nInline citations – place [tag] immediately after each claim; tag = first author's surname (or first significant title word if no author) + last two digits of year, e.g. [smith24]; add \"-a\", \"-b\"... if needed to keep tags unique; reuse the same tag for repeat citations.  \nReferences – append \"### References\" after the text; list every unique tag in the order it first appears, one per line with a blank line between, formatted **[tag]** [Full Source Title](URL) | [Journal Name]. Show URLs only here. Leave journal blank if not available.  \nNo other citation style.",
+                    content="IMPORTANT: Use inline citations and a final \"### References\" section.  \nInline citations – place [tag] immediately after each claim; tag = first author's surname (or first significant title word if no author) + last two digits of year, e.g. [smith24]; add \"-a\", \"-b\"... if needed to keep tags unique; reuse the same tag for repeat citations.  \nReferences – append \"### References\" after the text; list every unique tag in the order it first appears, one per line with a blank line between, formatted **[tag]** [Full Source Title](URL) - add ` | [Journal Name]` only if journal information is available. Show URLs only here. If no journal info exists, use the original format without any journal-related symbols.  \nNo other citation style.",
                     name="system",
                 )
             )

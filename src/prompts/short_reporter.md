@@ -31,9 +31,10 @@ Provide a concise answer in around 2 paragraphs that:
 - Add "-a", "-b"... if needed to keep tags unique
 - Reuse the same tag for repeat citations
 - Include a "### References" section at the end listing every unique tag in order of first appearance
-- Format references as **[tag]** [Full Source Title](URL) | [Journal Name] with blank lines between each (leave journal blank if not available)
-- When listing references or intermediary findings, always include the journal name at the end of each item (leave blank if not available).
-- Example: **[smith24]** [Aspirin and Heart Disease](https://example.com/aspirin) | Nature
+- **Reference Format**: **[tag]** [Full Source Title](URL) - add ` | [Journal Name]` only if journal information is available
+- **Examples**: 
+- - With journal: **[smith24]** [Aspirin and Heart Disease](https://example.com/aspirin) | Nature
+- - Without journal: **[smith24]** [Aspirin and Heart Disease](https://example.com/aspirin)
 
 # Writing Guidelines
 
