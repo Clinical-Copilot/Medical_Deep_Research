@@ -101,29 +101,3 @@ with open(output_path, 'w', encoding='utf-8') as f:
     json.dump(sorted_journals, f, indent=2, ensure_ascii=False)
 
 print(f"\nSuccessfully saved {len(sorted_journals)} unique journals to {output_path}")
-
-# Debugging output
-journals_with_print_issn = sum(1 for j in sorted_journals.values() if j['print_issn'])
-journals_with_electronic_issn = sum(1 for j in sorted_journals.values() if j['electronic_issn'])
-journals_with_both_issns = sum(1 for j in sorted_journals.values() if j['print_issn'] and j['electronic_issn'])
-journals_q1 = sum(1 for j in sorted_journals.values() if j['quartile'] == 'Q1')
-
-print(f"  - Journals with print ISSN: {journals_with_print_issn} ({journals_with_print_issn/len(sorted_journals)*100:.1f}%)")
-print(f"  - Journals with electronic ISSN: {journals_with_electronic_issn} ({journals_with_electronic_issn/len(sorted_journals)*100:.1f}%)")
-print(f"  - Journals with both ISSNs: {journals_with_both_issns} ({journals_with_both_issns/len(sorted_journals)*100:.1f}%)")
-print(f"  - Q1 journals: {journals_q1} ({journals_q1/len(sorted_journals)*100:.1f}%)")
-
-# Show top 10 journals
-print(f"\nTop 10 biomedical journals by SJR:")
-for i, (title, data) in enumerate(list(sorted_journals.items())[:10], 1):
-    print(f"  {i:2d}. {title}")
-    print(f"      SJR: {data['sjr']:.3f}, {data['quartile']}, H-index: {data['h_index']}")
-    if data['print_issn'] or data['electronic_issn']:
-        issn_info = []
-        if data['print_issn']:
-            issn_info.append(f"Print: {data['print_issn']}")
-        if data['electronic_issn']:
-            issn_info.append(f"Electronic: {data['electronic_issn']}")
-        print(f"      ISSN: {', '.join(issn_info)}")
-    print(f"      Country: {data['country']}, Publisher: {data['publisher']}")
-    print()
