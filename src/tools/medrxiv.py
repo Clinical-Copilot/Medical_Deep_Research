@@ -14,6 +14,22 @@ from src.llms.llm import get_llm_by_type
 
 logger = logging.getLogger(__name__)
 
+def get_issn_from_doi(doi: str) -> str:
+    """Return ISSN from a published DOI using CrossRef. If missing, return 'unpublished'."""
+    if not doi:
+        return "unpublished"
+    url = f"https://api.crossref.org/works/{doi}"
+    try:
+        res = requests.get(url, timeout=5)
+        res.raise_for_status()
+        data = res.json()
+        if "ISSN" in data["message"] and data["message"]["ISSN"]:
+            return data["message"]["ISSN"][0]
+        else:
+            return "unpublished"
+    except Exception:
+        return "unpublished"
+
 
 def parse_query(query: str, model) -> str:
     """Parse a natural language query into searchable keywords for MedRxiv."""
@@ -87,6 +103,17 @@ def search_medrxiv(query: str, model, max_results=1):
             article_page = requests.get(full_link)
             article_soup = BeautifulSoup(article_page.text, "html.parser")
 
+            #DOI/ISSN if published
+            doi_tag = article_soup.find("span", class_="highwire-cite-metadata-doi")
+            published_doi = None
+            issn = "unpublished"
+
+            if doi_tag:
+                doi_link = doi_tag.find("a")
+                if doi_link and "doi.org" in doi_link["href"]:
+                    published_doi = doi_link["href"].split("doi.org/")[-1].strip()
+                    issn = get_issn_from_doi(published_doi)
+
             # Authors
             authors_tag = article_soup.find("div", class_="highwire-cite-authors")
             authors = ", ".join([
@@ -136,7 +163,8 @@ def search_medrxiv(query: str, model, max_results=1):
                 "authors": authors,
                 "date": date,
                 "journal": journal,
-                # "full_text": full_text
+                "full_text": full_text,
+                "issn": issn
             })
 
         except Exception as e:
@@ -169,11 +197,12 @@ async def medrxiv_tool(
             return "No MedRxiv preprints found for this query."
 
         output = "\n\n".join(
-            f"Link:{r['link']}\n"
+            f"Link: {r['link']}\n"
             f"**{i+1}. {r['title']}**\n"
             f"*Authors:* {r['authors']}  \n"
             f"*Journal:* {r['journal']}  \n"
             f"*Date:* {r['date']}  \n"
+            f"*ISSN:* {r['issn']}  \n"
             f"{r['abstract']}...\n"
             # f"{r['full_text']}"
             for i, r in enumerate(results[:5])

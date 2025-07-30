@@ -1,17 +1,53 @@
 import logging
 import aiohttp
+import requests
+import asyncio
 from typing import Annotated, List
 
 from langchain_core.tools import tool
 from .decorators import log_io
 from src.tools.medrxiv import search_medrxiv
 from src.llms.llm import get_llm_by_type
+from bs4 import BeautifulSoup
 
 logger = logging.getLogger(__name__)
 
 
+def get_issn_from_pmid(pmid_or_pmcid: str) -> dict:
+    """Return both e-ISSN and p-ISSN from PubMed or PMC using efetch."""
+    pmid_or_pmcid = str(pmid_or_pmcid)
+    url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"
+    db = "pmc" if pmid_or_pmcid.lower().startswith("pmc") else "pubmed"
+    pmid_clean = pmid_or_pmcid.replace("PMC", "").replace("pmc", "")
+
+    try:
+        response = requests.get(url, params={
+            "db": db,
+            "id": pmid_clean,
+            "retmode": "xml"
+        }, timeout=5)
+        response.raise_for_status()
+        soup = BeautifulSoup(response.text, "lxml-xml")
+
+        result = {"e_issn": "N/A", "p_issn": "N/A"}
+
+        for tag in soup.find_all(['ISSN', 'issn']):
+            attr = tag.get("IssnType") or tag.get("pub-type")
+            if attr:
+                attr = attr.lower()
+                if attr in ["electronic", "epub"]:
+                    result["e_issn"] = tag.text.strip()
+                elif attr in ["print", "ppub"]:
+                    result["p_issn"] = tag.text.strip()
+
+        return result
+    except Exception as e:
+        logger.warning(f"Failed to fetch ISSN from efetch for {pmid_or_pmcid}: {e}")
+        return {"e_issn": "N/A", "p_issn": "N/A"}
+
+
 async def query_litsense(query: str, top_k: int = 3) -> List[str]:
-    """Query LitSense and return top_k formatted results."""
+    """Query LitSense and return top_k formatted results with ISSN enrichment."""
     try:
         url = "https://www.ncbi.nlm.nih.gov/research/litsense2-api/api/passages/"
         params = {"query": query, "rerank": "true"}
@@ -24,10 +60,28 @@ async def query_litsense(query: str, top_k: int = 3) -> List[str]:
         if not data:
             return []
 
-        return [
-            f"{i+1}. {p['text'].strip()}\n[PMCID: {p.get('pmcid')}, Section: {p.get('section')}, Score: {p.get('score'):.3f}]"
-            for i, p in enumerate(data[:top_k])
-        ]
+        results = []
+        for i, p in enumerate(data[:top_k]):
+            try:
+                pmid_or_pmcid = p.get("pmcid") or p.get("pmid")
+                issns = await asyncio.to_thread(get_issn_from_pmid, pmid_or_pmcid) if pmid_or_pmcid else {"e_issn": "N/A", "p_issn": "N/A"}
+
+                text = p.get("text", "").strip()
+                section = p.get("section") or "N/A"
+                score = p.get("score")
+                score_str = f"{score:.3f}" if isinstance(score, (int, float)) else str(score) if score is not None else "N/A"
+
+                formatted = (
+                    f"{i+1}. {text}\n"
+                    f"[PMID/PMCID: {pmid_or_pmcid}, e-ISSN: {issns['e_issn']}, p-ISSN: {issns['p_issn']}, "
+                    f"Section: {section}, Score: {score_str}]"
+                )
+                results.append(formatted)
+            except Exception as inner_e:
+                logger.error(f"Error formatting LitSense result #{i}: {inner_e}, data={p}")
+                continue
+
+        return results
 
     except Exception as e:
         logger.error(f"LiteSense API error: {str(e)}")
@@ -49,9 +103,6 @@ def extract_key_sentences_from_abstract(abstract: str) -> str:
         Output (comma-separated):"""
     response = llm.invoke(prompt)
     content = response.content.strip() if hasattr(response, "content") else str(response).strip()
-
-    # print("\nKey sentences extracted from abstract:")
-    # print(content, "\n")
     return content
 
 
