@@ -60,7 +60,7 @@ def match_medrxiv_result(medrxiv_result: Dict, journal_data: Dict) -> Dict:
     if not issn or issn == "unpublished":
         return {
             **base_result,
-            'credibility_status': 'unpublished',
+            'credibility_status': 'unverified',
             'credibility_reason': 'Preprint not yet published in peer-reviewed journal',
             'journal_match': False
         }
@@ -69,7 +69,7 @@ def match_medrxiv_result(medrxiv_result: Dict, journal_data: Dict) -> Dict:
     if match:
         return {
             **base_result,
-            'credibility_status': 'credible',
+            'credibility_status': 'verified',
             'credibility_reason': f"Published in {match['journal_name']} (SJR: {match['journal_data']['sjr']})",
             'journal_match': True,
             **match
@@ -77,7 +77,7 @@ def match_medrxiv_result(medrxiv_result: Dict, journal_data: Dict) -> Dict:
     else:
         return {
             **base_result,
-            'credibility_status': 'questionable',
+            'credibility_status': 'unverified',
             'credibility_reason': 'Journal not found in curated biomedical database',
             'journal_match': False
         }
@@ -103,7 +103,7 @@ def match_litesense_result(litesense_text: str, journal_data: Dict) -> Dict:
     if not issns_to_check:
         return {
             **base_result,
-            'credibility_status': 'unknown',
+            'credibility_status': 'unverified',
             'credibility_reason': 'No ISSN found in result',
             'journal_match': False
         }
@@ -119,7 +119,7 @@ def match_litesense_result(litesense_text: str, journal_data: Dict) -> Dict:
                 **base_result,
                 'paper_issn': issn,
                 'issn_type': issn_type,
-                'credibility_status': 'credible',
+                'credibility_status': 'verified',
                 'credibility_reason': f"Published in {match['journal_name']} (SJR: {match['journal_data']['sjr']})",
                 'journal_match': True,
                 **match
@@ -130,7 +130,7 @@ def match_litesense_result(litesense_text: str, journal_data: Dict) -> Dict:
     return {
         **base_result,
         'paper_issn': ', '.join(issn_list),
-        'credibility_status': 'questionable',
+        'credibility_status': 'unverified',
         'credibility_reason': 'Journal not found in curated biomedical database',
         'journal_match': False
     }
@@ -143,8 +143,8 @@ def check_issn_matches(medrxiv_results: List[Dict] = None, litesense_results: Li
         'medrxiv_results': [],
         'litesense_results': [],
         'summary': {
-            'medrxiv': {'credible': 0, 'questionable': 0, 'unpublished': 0, 'unknown': 0},
-            'litesense': {'credible': 0, 'questionable': 0, 'unpublished': 0, 'unknown': 0}
+            'medrxiv': {'verified': 0, 'unverified': 0},
+            'litesense': {'verified': 0, 'unverified': 0}
         }
     }
     
