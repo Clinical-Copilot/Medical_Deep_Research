@@ -11,6 +11,7 @@ from typing import Annotated
 from langchain_core.tools import tool
 from .decorators import log_io
 from src.llms.llm import get_llm_by_type
+from src.tools.bioportal import BioPortalStandardizer
 
 logger = logging.getLogger(__name__)
 
@@ -73,9 +74,8 @@ def extract_full_text_sections(soup: BeautifulSoup) -> str:
     return "\n\n".join(sections).strip()
 
 
-
 def search_medrxiv(query: str, model, max_results=1):
-    """Search MedRxiv for biomedical preprints based on the given query."""
+    """Search MedRxiv for biomedical preprints based on the given query (already normalized upstream)."""
     keywords = parse_query(query, model)
     encoded_query = urllib.parse.quote(keywords)
     search_url = f"https://www.medrxiv.org/search/{encoded_query}%20numresults%3A{max_results}%20sort%3Arelevance-rank"
@@ -103,7 +103,7 @@ def search_medrxiv(query: str, model, max_results=1):
             article_page = requests.get(full_link)
             article_soup = BeautifulSoup(article_page.text, "html.parser")
 
-            #DOI/ISSN if published
+            # DOI/ISSN if published
             doi_tag = article_soup.find("span", class_="highwire-cite-metadata-doi")
             published_doi = None
             issn = "unpublished"
@@ -123,12 +123,10 @@ def search_medrxiv(query: str, model, max_results=1):
 
             # Journal (try to extract, else blank)
             journal = ""
-            # Try to find journal/source info
             journal_tag = article_soup.find("span", class_="highwire-cite-metadata-journal")
             if journal_tag:
                 journal = journal_tag.get_text(strip=True)
             else:
-                # Sometimes in meta tag
                 meta_journal = article_soup.find("meta", attrs={"name": "citation_journal_title"})
                 if meta_journal and meta_journal.get("content"):
                     journal = meta_journal["content"].strip()
@@ -183,18 +181,26 @@ async def medrxiv_tool(
 ) -> str:
     """
     MedRxiv Preprint Search Tool
-    - Uses an LLM to extract keywords from a natural-language query
+    - Normalizes the query via BioPortal (once) to anchor to ontology terms
+    - Uses an LLM to extract keywords from the normalized query
     - Scrapes medRxiv.org for recent biomedical preprints
     - Returns paper title, abstract snippet, link, and publication date
     """
     try:
+        # Normalize query via BioPortal
+        standardizer = BioPortalStandardizer()
+        _, updated_query, _ = standardizer.standardize_query(query)
+
+        # Log only in backend
+        logger.info(f"[MedRxiv] Updated Query used for search: {updated_query}")
+
         llm = get_llm_by_type("basic")
 
         loop = asyncio.get_event_loop()
-        results = await loop.run_in_executor(None, lambda: search_medrxiv(query, model=llm))
+        results = await loop.run_in_executor(None, lambda: search_medrxiv(updated_query, model=llm))
 
         if not results:
-            return "No MedRxiv preprints found for this query."
+            return f"Updated Query: {updated_query}\nNo MedRxiv preprints found for this query."
 
         output = "\n\n".join(
             f"Link: {r['link']}\n"
@@ -204,11 +210,10 @@ async def medrxiv_tool(
             f"*Date:* {r['date']}  \n"
             f"*ISSN:* {r['issn']}  \n"
             f"{r['abstract']}...\n"
-            # f"{r['full_text']}"
             for i, r in enumerate(results[:5])
         )
 
-        return output
+        return f"Updated Query: {updated_query}\n\n" + output
 
     except Exception as e:
         error_msg = f"MedRxiv tool error: {str(e)}"
