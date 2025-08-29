@@ -89,13 +89,14 @@ cp conf.yaml.example conf.yaml
 #### Backend Setup
 ```
 cd backend
+
 # Start the backend server
 uvicorn main:app --reload
 ```
 
+#### Open a new terminal window
 #### Frontend Setup
 ```bash
-# Open a new terminal window
 cd frontend
 
 # Install frontend dependencies
