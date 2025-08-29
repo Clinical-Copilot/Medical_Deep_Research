@@ -69,11 +69,10 @@ Two complementary resource pillars:
 
 ### ⚙️ Setup
 
-#### Backend Setup
 ```bash
 # Clone the repository
-git clone https://github.com/realYuanLi/meddr.git
-cd meddr
+git clone https://github.com/Clinical-Copilot/Medical_Deep_Research.git
+cd Medical_Deep_Research
 
 # Create virtual environment
 python -m venv meddr_env
@@ -85,7 +84,11 @@ pip install -r requirements.txt
 # Configure environment
 cp conf.yaml.example conf.yaml
 # Edit conf.yaml with your API keys
+```
 
+#### Backend Setup
+```
+cd backend
 # Start the backend server
 uvicorn main:app --reload
 ```
@@ -93,7 +96,7 @@ uvicorn main:app --reload
 #### Frontend Setup
 ```bash
 # Open a new terminal window
-cd meddr/frontend
+cd frontend
 
 # Install frontend dependencies
 npm install
